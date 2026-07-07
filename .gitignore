@@ -1,0 +1,18 @@
+# Configuração local com credenciais reais (não versionar)
+casamento_web/config.local.php
+**/config.local.php
+
+# Uploads e ficheiros gerados em runtime
+casamento_web/uploads/
+*.log
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+
+# Dependências (fases futuras)
+node_modules/
+vendor/
+.env
+.env.*
+!.env.example

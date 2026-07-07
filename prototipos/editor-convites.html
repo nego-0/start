@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Atelier de Convites · Protótipo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=EB+Garamond:ital,wght@0,500;0,600;1,500&family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Pinyon+Script&family=Great+Vibes&family=Tangerine:wght@700&family=Jost:wght@300;400;500&family=Montserrat:wght@300;400;500&family=Josefin+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --stage:#E7E3DA; --stage-2:#DED9CD;
+    --panel:#16261E; --panel-2:#1E3226; --panel-3:#25402F;
+    --gold:#C79A5A; --gold-soft:#D9BC8C; --ivory:#FBF8F1;
+    --on-dark:#E8E4DA; --on-muted:#9BA79A;
+    --line:rgba(217,188,140,.16);
+    --ui:'Jost',system-ui,sans-serif; --serif:'Cormorant Garamond',Georgia,serif;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ height:100%; }
+  body{ margin:0; font-family:var(--ui); color:var(--on-dark); background:var(--panel);
+    display:grid; grid-template-rows:auto 1fr; overflow:hidden; }
+  button{ font-family:inherit; cursor:pointer; }
+  ::-webkit-scrollbar{ width:10px; } ::-webkit-scrollbar-thumb{ background:rgba(217,188,140,.25); border-radius:20px; }
+
+  /* ---------- Barra superior ---------- */
+  .topo{ display:flex; align-items:center; gap:1rem; padding:.7rem 1.1rem; background:var(--panel);
+    border-bottom:1px solid var(--line); }
+  .marca{ display:flex; align-items:center; gap:.6rem; }
+  .selo-top{ width:38px; height:38px; border:1.5px solid var(--gold-soft); border-radius:50%;
+    display:flex; align-items:center; justify-content:center; color:var(--gold-soft);
+    font-family:var(--serif); font-weight:700; font-size:.95rem; }
+  .marca .t{ font-family:var(--serif); font-size:1.2rem; color:var(--ivory); line-height:1; }
+  .marca .s{ font-size:.68rem; letter-spacing:2px; text-transform:uppercase; color:var(--on-muted); }
+  .topo .espaco{ flex:1; }
+  .modelos{ display:flex; gap:.35rem; background:var(--panel-2); padding:.28rem; border-radius:50px; border:1px solid var(--line); }
+  .modelos button{ border:none; background:transparent; color:var(--on-muted); font-size:.82rem; font-weight:500;
+    padding:.42rem .85rem; border-radius:50px; }
+  .modelos button.on{ background:var(--gold); color:#231a0d; }
+  .btn-desc{ border:none; background:linear-gradient(135deg,var(--gold),#A87C3C); color:#20160a;
+    font-weight:600; padding:.6rem 1.1rem; border-radius:50px; display:inline-flex; align-items:center; gap:.5rem; font-size:.9rem; }
+  .btn-desc svg{ width:16px; height:16px; }
+  .btn-desc:active{ transform:translateY(1px); }
+
+  /* ---------- Corpo ---------- */
+  .corpo{ display:grid; grid-template-columns:340px 1fr; min-height:0; }
+
+  /* ---------- Consola de controlos ---------- */
+  .consola{ background:var(--panel); border-right:1px solid var(--line); overflow-y:auto; padding:.4rem 0 3rem; }
+  .grupo{ border-bottom:1px solid var(--line); }
+  .grupo > .cab{ width:100%; display:flex; align-items:center; gap:.6rem; background:transparent; border:none;
+    color:var(--ivory); padding:.95rem 1.15rem; font-size:.82rem; font-weight:500; letter-spacing:.4px; text-transform:uppercase; }
+  .grupo > .cab .ico{ color:var(--gold); display:inline-flex; }
+  .grupo > .cab .ico svg{ width:17px; height:17px; }
+  .grupo > .cab .seta{ margin-left:auto; transition:transform .2s; color:var(--on-muted); }
+  .grupo.fechado > .cab .seta{ transform:rotate(-90deg); }
+  .grupo .conteudo{ padding:.2rem 1.15rem 1.15rem; }
+  .grupo.fechado .conteudo{ display:none; }
+
+  label.campo{ display:block; margin:.7rem 0 .3rem; font-size:.72rem; text-transform:uppercase; letter-spacing:.6px; color:var(--on-muted); }
+  .in, textarea.in{ width:100%; background:var(--panel-2); border:1px solid var(--line); border-radius:10px;
+    color:var(--ivory); font-family:inherit; font-size:.92rem; padding:.6rem .7rem; }
+  .in:focus, textarea.in:focus{ outline:none; border-color:var(--gold-soft); box-shadow:0 0 0 3px rgba(199,154,90,.18); }
+  textarea.in{ resize:vertical; min-height:64px; line-height:1.5; }
+  .dois{ display:grid; grid-template-columns:1fr 1fr; gap:.5rem; }
+
+  /* paletas */
+  .paletas{ display:grid; grid-template-columns:repeat(5,1fr); gap:.5rem; margin-top:.3rem; }
+  .pal{ border:1px solid var(--line); border-radius:10px; padding:.3rem; background:var(--panel-2); cursor:pointer; }
+  .pal.on{ border-color:var(--gold-soft); box-shadow:0 0 0 2px rgba(199,154,90,.3); }
+  .pal .faixas{ display:flex; height:26px; border-radius:6px; overflow:hidden; }
+  .pal .faixas i{ flex:1; }
+  .pal .nm{ font-size:.62rem; color:var(--on-muted); text-align:center; margin-top:.25rem; letter-spacing:.3px; }
+
+  .cores{ display:grid; grid-template-columns:repeat(4,1fr); gap:.5rem; margin-top:.6rem; }
+  .cor{ text-align:center; }
+  .cor input[type=color]{ width:100%; height:34px; border:1px solid var(--line); border-radius:8px; background:var(--panel-2); padding:2px; cursor:pointer; }
+  .cor span{ display:block; font-size:.62rem; color:var(--on-muted); margin-top:.25rem; }
+
+  /* tipografia */
+  .pares{ display:grid; gap:.45rem; margin-top:.3rem; }
+  .par{ display:flex; align-items:center; justify-content:space-between; gap:.6rem; background:var(--panel-2);
+    border:1px solid var(--line); border-radius:10px; padding:.55rem .75rem; cursor:pointer; }
+  .par.on{ border-color:var(--gold-soft); box-shadow:0 0 0 2px rgba(199,154,90,.25); }
+  .par .demo{ color:var(--ivory); font-size:1.35rem; line-height:1; }
+  .par .lbl{ font-size:.72rem; color:var(--on-muted); }
+
+  /* secções (toggles) */
+  .toggle{ display:flex; align-items:center; justify-content:space-between; padding:.55rem 0; border-bottom:1px solid rgba(217,188,140,.08); }
+  .toggle:last-child{ border-bottom:none; }
+  .toggle .nm{ font-size:.9rem; color:var(--on-dark); }
+  .sw{ width:42px; height:24px; border-radius:50px; background:var(--panel-3); border:1px solid var(--line); position:relative; transition:.2s; flex:none; }
+  .sw::after{ content:''; position:absolute; top:2px; left:2px; width:18px; height:18px; border-radius:50%; background:var(--on-muted); transition:.2s; }
+  .sw.on{ background:var(--gold); } .sw.on::after{ left:21px; background:#20160a; }
+
+  .foto-zona{ border:1.5px dashed var(--line); border-radius:12px; padding:1rem; text-align:center; color:var(--on-muted); font-size:.85rem; cursor:pointer; }
+  .foto-zona:hover{ border-color:var(--gold-soft); color:var(--on-dark); }
+  .foto-previa{ margin-top:.6rem; border-radius:10px; overflow:hidden; display:none; position:relative; }
+  .foto-previa img{ width:100%; display:block; max-height:120px; object-fit:cover; }
+  .foto-previa button{ position:absolute; top:6px; right:6px; background:rgba(0,0,0,.55); color:#fff; border:none; border-radius:50px; padding:.2rem .55rem; font-size:.72rem; }
+
+  .nota{ font-size:.74rem; color:var(--on-muted); line-height:1.5; margin-top:.6rem; }
+
+  /* ---------- Palco + telemóvel ---------- */
+  .palco{ background:
+      radial-gradient(1000px 500px at 50% -10%, rgba(199,154,90,.12), transparent 60%),
+      linear-gradient(160deg,var(--stage),var(--stage-2));
+    display:flex; align-items:center; justify-content:center; overflow:auto; padding:2rem; min-height:0; }
+  .telemovel{ width:340px; height:710px; background:#0c130f; border-radius:44px; padding:12px;
+    box-shadow:0 40px 80px rgba(22,38,30,.4), inset 0 0 0 2px rgba(255,255,255,.06); flex:none; position:relative; }
+  .telemovel::before{ content:''; position:absolute; top:20px; left:50%; transform:translateX(-50%); width:120px; height:6px; border-radius:10px; background:rgba(255,255,255,.12); z-index:5; }
+  .tela{ width:100%; height:100%; border-radius:34px; overflow:hidden; overflow-y:auto; background:#fff; -webkit-overflow-scrolling:touch; }
+
+  /* ---------- CONVITE (tema aplicado por variáveis) ---------- */
+  /* ---------- Cena partilhada (variáveis de tema) ---------- */
+  #cena{
+    --c-hero:#16261E; --c-fundo:#FBF8F1; --c-ouro:#B4864A; --c-tinta:#2C4536; --c-suave:#EFE3CB;
+    --f-script:'Pinyon Script',cursive; --f-serif:'Cormorant Garamond',serif; --f-sans:'Jost',sans-serif;
+    display:flex; align-items:center; justify-content:center; gap:2.5rem; flex-wrap:wrap;
+  }
+  #convite{ font-family:var(--f-sans); color:var(--c-tinta); background:var(--c-fundo); position:relative; min-height:100%; }
+  #convite .petalas{ position:absolute; inset:0; overflow:hidden; pointer-events:none; z-index:2; }
+  #convite .petala{ position:absolute; top:-20px; width:11px; height:11px; border-radius:0 70% 0 70%;
+    background:var(--c-ouro); opacity:.35; animation:cair linear infinite; }
+  @keyframes cair{ 0%{ transform:translateY(-8vh) rotate(0); opacity:0 } 12%{ opacity:.4 } 100%{ transform:translateY(120vh) rotate(320deg); opacity:0 } }
+  @media (prefers-reduced-motion:reduce){ #convite .petala{ display:none } }
+
+  #convite .hero{ background:var(--c-hero); color:var(--c-fundo); text-align:center; padding:2.6rem 1.4rem 2.2rem; position:relative; z-index:3; }
+  #convite .hero.tem-foto{ padding:0; }
+  #convite .foto-hero{ position:relative; height:270px; display:flex; align-items:flex-end; justify-content:center;
+    background-size:cover; background-position:center; }
+  #convite .foto-hero::after{ content:''; position:absolute; inset:0; background:linear-gradient(to top, rgba(0,0,0,.6), rgba(0,0,0,.05) 55%); }
+  #convite .foto-hero .interno{ position:relative; z-index:2; padding:1.6rem 1.2rem; color:#fff; }
+  #convite .selo{ width:62px; height:62px; margin:0 auto .8rem; border:2px solid var(--c-ouro); border-radius:50%;
+    display:flex; align-items:center; justify-content:center; font-family:var(--f-serif); font-weight:700; font-size:1.15rem; color:var(--c-ouro); }
+  #convite .rotulo{ font-family:var(--f-serif); letter-spacing:4px; text-transform:uppercase; font-size:.68rem; opacity:.85; }
+  #convite .casal{ font-family:var(--f-script); font-size:3.3rem; line-height:1.02; margin:.25rem 0 .1rem; color:#fff; }
+  #convite .quando{ font-family:var(--f-serif); font-size:1rem; opacity:.92; }
+
+  #convite .corpo{ padding:1.9rem 1.5rem 2.4rem; position:relative; z-index:3; }
+  #convite .divisor{ display:flex; align-items:center; gap:.6rem; color:var(--c-ouro); margin:1.3rem 0; }
+  #convite .divisor::before,#convite .divisor::after{ content:''; height:1px; flex:1; background:linear-gradient(90deg,transparent,var(--c-ouro),transparent); }
+
+  #convite .contador{ display:flex; justify-content:center; gap:.7rem; }
+  #convite .u{ text-align:center; min-width:52px; }
+  #convite .u .v{ font-family:var(--f-serif); font-size:1.9rem; font-weight:700; color:var(--c-tinta); line-height:1; }
+  #convite .u .t{ font-size:.6rem; text-transform:uppercase; letter-spacing:1px; color:var(--c-ouro); }
+
+  #convite .citacao{ text-align:center; font-family:var(--f-serif); font-style:italic; font-size:1.18rem; color:var(--c-tinta); line-height:1.5; padding:.4rem .6rem; }
+  #convite .local{ text-align:center; font-size:.95rem; line-height:1.7; }
+  #convite .local strong{ font-weight:500; }
+  #convite .btn-conv{ display:inline-flex; align-items:center; justify-content:center; gap:.5rem; width:100%;
+    border:none; border-radius:50px; padding:.85rem; font-family:var(--f-sans); font-weight:500; font-size:.98rem; margin-top:.5rem; }
+  #convite .btn-ouro{ background:var(--c-ouro); color:#fff; }
+  #convite .btn-linha{ background:transparent; border:1.5px solid var(--c-ouro); color:var(--c-tinta); margin-top:.6rem; }
+  #convite .esconde{ display:none !important; }
+
+  /* ---------- Troca de vista (Digital / Impresso) ---------- */
+  .vista-switch{ position:absolute; top:14px; left:50%; transform:translateX(-50%); display:flex; gap:.3rem;
+    background:rgba(22,38,30,.92); border:1px solid var(--line); border-radius:50px; padding:.25rem; z-index:6; }
+  .vista-switch button{ border:none; background:transparent; color:var(--on-muted); font-family:var(--ui); font-weight:500;
+    font-size:.82rem; padding:.42rem 1.1rem; border-radius:50px; }
+  .vista-switch button.on{ background:var(--gold); color:#20160a; }
+
+  /* ---------- Cartão impresso (medidas físicas em mm) ---------- */
+  .folha{ background:#fff; box-shadow:0 30px 70px rgba(22,38,30,.30); position:relative; flex:none; }
+  .cartao-imp{ position:absolute; inset:0; background:var(--c-fundo); color:var(--c-tinta); overflow:hidden;
+    display:flex; align-items:center; justify-content:center; text-align:center; font-family:var(--f-sans); }
+  .cartao-imp .moldura{ position:absolute; inset:6mm; border:0.4mm solid var(--c-ouro); pointer-events:none; }
+  .cartao-imp .moldura::after{ content:''; position:absolute; inset:1.5mm; border:0.2mm solid var(--c-ouro); opacity:.5; }
+  .imp-conteudo{ position:relative; z-index:2; padding:16mm 13mm; }
+  .imp-mono{ width:17mm; height:17mm; margin:0 auto 4mm; border:0.5mm solid var(--c-ouro); border-radius:50%;
+    display:flex; align-items:center; justify-content:center; font-family:var(--f-serif); font-weight:700; font-size:6.6mm; color:var(--c-ouro); }
+  .imp-eyebrow{ font-family:var(--f-serif); text-transform:uppercase; letter-spacing:1.3mm; font-size:2.6mm; color:var(--c-ouro); line-height:1.5; }
+  .imp-nomes{ font-family:var(--f-script); font-size:17mm; line-height:1.02; color:var(--c-tinta); margin:1.5mm 0; }
+  .imp-div{ display:flex; align-items:center; justify-content:center; gap:2mm; color:var(--c-ouro); margin:4mm auto; width:55%; font-size:3mm; }
+  .imp-div::before,.imp-div::after{ content:''; height:0.3mm; flex:1; background:var(--c-ouro); opacity:.6; }
+  .imp-data{ font-family:var(--f-serif); font-size:5mm; color:var(--c-tinta); }
+  .imp-hora{ font-family:var(--f-serif); font-size:3.7mm; color:var(--c-ouro); margin-top:1mm; letter-spacing:.4mm; }
+  .imp-local{ font-size:3.3mm; line-height:1.7; margin-top:5mm; color:var(--c-tinta); }
+  .imp-local strong{ font-weight:500; }
+  .imp-rodape{ font-size:2.8mm; color:var(--c-tinta); opacity:.72; margin-top:6mm; font-style:italic; }
+  /* marcas de corte (indicador no ecrã) */
+  .folha.marcas .tick{ position:absolute; width:3mm; height:3mm; z-index:4; }
+  .folha.marcas .tick::before,.folha.marcas .tick::after{ content:''; position:absolute; background:#333; }
+  .folha.marcas .tick::before{ width:0.25mm; height:100%; } .folha.marcas .tick::after{ height:0.25mm; width:100%; }
+  .tick.t1{ top:0; left:0 } .tick.t2{ top:0; right:0 } .tick.t3{ bottom:0; left:0 } .tick.t4{ bottom:0; right:0 }
+
+  .dica-palco{ position:absolute; bottom:14px; left:50%; transform:translateX(-50%); font-size:.75rem; color:#8c8577; background:rgba(255,255,255,.6); padding:.35rem .8rem; border-radius:50px; }
+
+  @media (max-width:900px){
+    .corpo{ grid-template-columns:1fr; }
+    .consola{ border-right:none; border-bottom:1px solid var(--line); max-height:46vh; }
+    .palco{ padding:1.2rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== BARRA SUPERIOR ===== -->
+<div class="topo">
+  <div class="marca">
+    <div class="selo-top" id="selo-top">I&amp;A</div>
+    <div>
+      <div class="t">Atelier de Convites</div>
+      <div class="s">Protótipo · Fase 1</div>
+    </div>
+  </div>
+  <div class="espaco"></div>
+  <div class="modelos" id="modelos"></div>
+  <div class="espaco"></div>
+  <button class="btn-desc" onclick="descarregar()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
+    <span id="rotulo-desc">Descarregar convite</span>
+  </button>
+</div>
+
+<div class="corpo">
+  <!-- ===== CONSOLA ===== -->
+  <aside class="consola" id="consola"></aside>
+
+  <!-- ===== PALCO ===== -->
+  <div class="palco">
+    <div class="vista-switch">
+      <button class="on" id="v-digital" onclick="trocarVista('digital')">Digital</button>
+      <button id="v-impresso" onclick="trocarVista('impresso')">Impresso</button>
+    </div>
+    <div id="cena">
+      <div class="telemovel" id="telemovel">
+        <div class="tela">
+          <div id="convite">
+            <div class="petalas" id="petalas"></div>
+            <div class="hero" id="hero">
+              <div class="selo" id="selo">I&amp;A</div>
+              <div class="rotulo" id="rotulo">Com alegria, convidam</div>
+              <div class="casal" id="casal">Isabel &amp; Abednego</div>
+              <div class="quando" id="quando">19 de Dezembro de 2026 · 16h00</div>
+            </div>
+            <div class="corpo">
+              <div class="sec sec-contagem" id="sec-contagem">
+                <div class="contador" id="contador"></div>
+                <div class="divisor">✦</div>
+              </div>
+              <div class="sec sec-citacao" id="sec-citacao">
+                <p class="citacao" id="citacao">Que o nosso amor seja para sempre.</p>
+                <div class="divisor">✦</div>
+              </div>
+              <div class="sec sec-local" id="sec-local">
+                <div class="local">
+                  <strong id="local">Estufa Municipal de Moçâmedes</strong><br>
+                  <span id="cidade">Namibe, Angola</span>
+                </div>
+                <button class="btn-conv btn-linha sec-mapa" id="sec-mapa">Ver localização no mapa</button>
+              </div>
+              <div class="sec sec-rsvp" id="sec-rsvp">
+                <div class="divisor">✦</div>
+                <button class="btn-conv btn-ouro">Confirmar presença</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="folha" id="folha" style="display:none">
+        <div class="tick t1"></div><div class="tick t2"></div><div class="tick t3"></div><div class="tick t4"></div>
+        <div class="cartao-imp" id="impresso"></div>
+      </div>
+    </div>
+    <div class="dica-palco" id="dica-palco">Pré-visualização ao vivo — tudo o que muda à esquerda reflete-se aqui</div>
+  </div>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+const el = id => document.getElementById(id);
+
+// ---------------------------------------------------------------
+// Estado do desenho
+// ---------------------------------------------------------------
+const estado = {
+  modelo: 'jardim',
+  noiva: 'Isabel', noivo: 'Abednego',
+  dataISO: '2026-12-19', hora: '16:00',
+  local: 'Estufa Municipal de Moçâmedes', cidade: 'Namibe, Angola',
+  rotulo: 'Com alegria, convidam',
+  citacao: 'Que o nosso amor seja para sempre.',
+  cores: { hero:'#16261E', fundo:'#FBF8F1', ouro:'#B4864A', tinta:'#2C4536' },
+  fontes: { script:"'Pinyon Script',cursive", serif:"'Cormorant Garamond',serif", sans:"'Jost',sans-serif" },
+  seccoes: { contagem:true, citacao:true, local:true, mapa:true, rsvp:true },
+  foto: null,
+  vista: 'digital',
+  impressao: { formato:'5x7', moldura:true, marcas:false, rodape:'Confirme a sua presença até 30 de Novembro' }
+};
+
+// Formatos de impressão (mm) — retrato
+const FORMATOS = {
+  '5x7':  { nome:'5×7 pol', w:127, h:178 },
+  'a5':   { nome:'A5',       w:148, h:210 },
+  'a6':   { nome:'A6',       w:105, h:148 },
+  'quad': { nome:'Quadrado', w:145, h:145 },
+};
+const MM = 3.7795; // 1mm em px a 96dpi (para dimensionar a folha no ecrã)
+
+// ---------------------------------------------------------------
+// Modelos (cada um = paleta + fontes + secções)
+// ---------------------------------------------------------------
+const MODELOS = {
+  jardim: { nome:'Jardim',
+    cores:{ hero:'#16261E', fundo:'#FBF8F1', ouro:'#B4864A', tinta:'#2C4536' },
+    fontesId:'classico',
+    seccoes:{ contagem:true, citacao:true, local:true, mapa:true, rsvp:true } },
+  marfim: { nome:'Marfim',
+    cores:{ hero:'#2B2A27', fundo:'#F7F4EE', ouro:'#A9884E', tinta:'#3A3833' },
+    fontesId:'editorial',
+    seccoes:{ contagem:true, citacao:false, local:true, mapa:true, rsvp:true } },
+  rose:   { nome:'Rosé',
+    cores:{ hero:'#5E3140', fundo:'#FBF1F0', ouro:'#C08A5A', tinta:'#6B3B4A' },
+    fontesId:'romantico',
+    seccoes:{ contagem:true, citacao:true, local:true, mapa:false, rsvp:true } },
+  meianoite: { nome:'Meia-noite',
+    cores:{ hero:'#141B2E', fundo:'#F3F4F8', ouro:'#C9A24B', tinta:'#20283C' },
+    fontesId:'moderno',
+    seccoes:{ contagem:true, citacao:true, local:true, mapa:true, rsvp:true } }
+};
+
+// Paletas rápidas
+const PALETAS = [
+  { id:'floresta', nome:'Floresta', c:{ hero:'#16261E', fundo:'#FBF8F1', ouro:'#B4864A', tinta:'#2C4536' } },
+  { id:'marfim',   nome:'Marfim',   c:{ hero:'#2B2A27', fundo:'#F7F4EE', ouro:'#A9884E', tinta:'#3A3833' } },
+  { id:'rose',     nome:'Rosé',     c:{ hero:'#5E3140', fundo:'#FBF1F0', ouro:'#C08A5A', tinta:'#6B3B4A' } },
+  { id:'oceano',   nome:'Oceano',   c:{ hero:'#0F3B3A', fundo:'#F0F6F4', ouro:'#C79A5A', tinta:'#17514F' } },
+  { id:'meia',     nome:'Meia-noite',c:{ hero:'#141B2E', fundo:'#F3F4F8', ouro:'#C9A24B', tinta:'#20283C' } },
+  { id:'terra',    nome:'Terracota',c:{ hero:'#5A2E23', fundo:'#FBF3EC', ouro:'#C67B45', tinta:'#6E3A2C' } },
+  { id:'lavanda',  nome:'Lavanda',  c:{ hero:'#3A2E52', fundo:'#F5F2FA', ouro:'#B08AC9', tinta:'#463663' } },
+  { id:'carvao',   nome:'Carvão',   c:{ hero:'#1C1C1C', fundo:'#F4F2EF', ouro:'#C9A24B', tinta:'#2A2A2A' } },
+  { id:'sagem',    nome:'Sálvia',   c:{ hero:'#3C4A3A', fundo:'#F4F6F1', ouro:'#B49A5E', tinta:'#42513F' } },
+  { id:'vinho',    nome:'Vinho',    c:{ hero:'#3A1220', fundo:'#FAF1F2', ouro:'#C08A5A', tinta:'#5A2136' } },
+];
+
+// Pares de tipos de letra
+const FONTES = {
+  classico:  { nome:'Clássico',  amostra:'Aa', demo:"'Pinyon Script',cursive",
+    v:{ script:"'Pinyon Script',cursive", serif:"'Cormorant Garamond',serif", sans:"'Jost',sans-serif" } },
+  romantico: { nome:'Romântico', amostra:'Aa', demo:"'Great Vibes',cursive",
+    v:{ script:"'Great Vibes',cursive", serif:"'EB Garamond',serif", sans:"'Montserrat',sans-serif" } },
+  editorial: { nome:'Editorial', amostra:'Aa', demo:"'Playfair Display',serif",
+    v:{ script:"'Cormorant Garamond',serif", serif:"'Playfair Display',serif", sans:"'Jost',sans-serif" } },
+  moderno:   { nome:'Moderno',   amostra:'Aa', demo:"'Tangerine',cursive",
+    v:{ script:"'Tangerine',cursive", serif:"'Playfair Display',serif", sans:"'Josefin Sans',sans-serif" } },
+};
+let fontesIdAtual = 'classico';
+
+// ícones
+const IC = {
+  detalhes:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16"/><path d="M6 16l6-11 6 11"/><path d="M9 13h6"/></svg>',
+  paleta:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r=".8"/><circle cx="17.5" cy="10.5" r=".8"/><circle cx="8.5" cy="7.5" r=".8"/><circle cx="6.5" cy="12.5" r=".8"/><path d="M12 2a10 10 0 1 0 0 20c1.1 0 2-.9 2-2 0-.5-.2-1-.5-1.3-.3-.4-.5-.8-.5-1.2 0-1.1.9-2 2-2h2a4 4 0 0 0 4-4c0-5-4.5-9-9-9z"/></svg>',
+  tipo:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7V5h16v2"/><path d="M9 19h6"/><path d="M12 5v14"/></svg>',
+  seccoes:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="5" rx="1.5"/><rect x="4" y="11" width="16" height="4" rx="1.5"/><rect x="4" y="17" width="16" height="3" rx="1.5"/></svg>',
+  foto:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8.5" cy="10" r="1.5"/><path d="M21 16l-5-5L5 19"/></svg>',
+  msg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-8 8H7l-4 2 1-4a8 8 0 1 1 17-6z"/></svg>',
+  imp:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8" rx="1"/></svg>',
+  seta:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>',
+};
+
+// ---------------------------------------------------------------
+// Construir a consola (controlos)
+// ---------------------------------------------------------------
+function grupo(id, ico, titulo, conteudoHTML, aberto=true){
+  return `<section class="grupo ${aberto?'':'fechado'}" id="g-${id}">
+    <button class="cab" onclick="this.parentElement.classList.toggle('fechado')">
+      <span class="ico">${ico}</span> ${titulo}
+      <span class="seta">${IC.seta}</span>
+    </button>
+    <div class="conteudo">${conteudoHTML}</div>
+  </section>`;
+}
+function construirConsola(){
+  const detalhes = `
+    <div class="dois">
+      <div><label class="campo">Noiva</label><input class="in" id="f-noiva" value="${estado.noiva}"></div>
+      <div><label class="campo">Noivo</label><input class="in" id="f-noivo" value="${estado.noivo}"></div>
+    </div>
+    <label class="campo">Frase de abertura</label><input class="in" id="f-rotulo" value="${estado.rotulo}">
+    <div class="dois">
+      <div><label class="campo">Data</label><input class="in" type="date" id="f-data" value="${estado.dataISO}"></div>
+      <div><label class="campo">Hora</label><input class="in" type="time" id="f-hora" value="${estado.hora}"></div>
+    </div>
+    <label class="campo">Local</label><input class="in" id="f-local" value="${estado.local}">
+    <label class="campo">Cidade</label><input class="in" id="f-cidade" value="${estado.cidade}">`;
+
+  const paleta = `
+    <div class="paletas" id="paletas"></div>
+    <div class="cores">
+      <div class="cor"><input type="color" id="c-hero" value="${estado.cores.hero}"><span>Capa</span></div>
+      <div class="cor"><input type="color" id="c-fundo" value="${estado.cores.fundo}"><span>Fundo</span></div>
+      <div class="cor"><input type="color" id="c-ouro" value="${estado.cores.ouro}"><span>Destaque</span></div>
+      <div class="cor"><input type="color" id="c-tinta" value="${estado.cores.tinta}"><span>Texto</span></div>
+    </div>`;
+
+  const tipo = `<div class="pares" id="pares"></div>`;
+
+  const seccoes = `
+    ${tog('contagem','Contagem decrescente')}
+    ${tog('citacao','Citação / mensagem')}
+    ${tog('local','Detalhes do local')}
+    ${tog('mapa','Botão de mapa')}
+    ${tog('rsvp','Confirmar presença')}`;
+
+  const foto = `
+    <div class="foto-zona" id="foto-zona">Carregar fotografia de capa<br><span style="font-size:.72rem">(clique para escolher)</span></div>
+    <input type="file" id="f-foto" accept="image/*" hidden>
+    <div class="foto-previa" id="foto-previa"><img id="foto-img"><button onclick="removerFoto()">Remover</button></div>
+    <p class="nota">A foto substitui a capa com sobreposição elegante do nome do casal.</p>`;
+
+  const msg = `<label class="campo">Citação ou mensagem</label>
+    <textarea class="in" id="f-citacao">${estado.citacao}</textarea>
+    <p class="nota">Aparece na secção "Citação / mensagem", se estiver ativada.</p>`;
+
+  const impressao = `
+    <label class="campo">Formato</label>
+    <select class="in" id="f-formato">
+      ${Object.entries(FORMATOS).map(([k,f])=>`<option value="${k}" ${estado.impressao.formato===k?'selected':''}>${f.nome} — ${f.w}×${f.h} mm</option>`).join('')}
+    </select>
+    ${togImp('moldura','Moldura dourada')}
+    ${togImp('marcas','Marcas de corte (impressão)')}
+    <label class="campo">Rodapé (RSVP)</label>
+    <input class="in" id="f-rodape" value="${esc(estado.impressao.rodape)}">
+    <p class="nota">O convite impresso é uma única página. As marcas de corte e a sangria só entram no ficheiro descarregado.</p>`;
+
+  el('consola').innerHTML =
+    grupo('detalhes', IC.detalhes, 'Detalhes', detalhes) +
+    grupo('paleta', IC.paleta, 'Paleta de cores', paleta) +
+    grupo('tipo', IC.tipo, 'Tipos de letra', tipo) +
+    grupo('seccoes', IC.seccoes, 'Secções (digital)', seccoes, false) +
+    grupo('foto', IC.foto, 'Fotografia (digital)', foto, false) +
+    grupo('msg', IC.msg, 'Mensagem', msg, false) +
+    grupo('impressao', IC.imp, 'Impressão', impressao, false);
+
+  renderPaletas(); renderPares(); ligarControlos();
+}
+function togImp(id, nome){
+  return `<div class="toggle"><span class="nm">${nome}</span>
+    <button class="sw ${estado.impressao[id]?'on':''}" id="swi-${id}" onclick="alternarImp('${id}')"></button></div>`;
+}
+function alternarImp(id){
+  estado.impressao[id]=!estado.impressao[id];
+  el('swi-'+id).classList.toggle('on', estado.impressao[id]);
+  renderImpresso();
+}
+function tog(id, nome){
+  return `<div class="toggle"><span class="nm">${nome}</span>
+    <button class="sw ${estado.seccoes[id]?'on':''}" id="sw-${id}" onclick="alternarSeccao('${id}')"></button></div>`;
+}
+
+function renderModelos(){
+  el('modelos').innerHTML = Object.entries(MODELOS).map(([id,m])=>
+    `<button class="${estado.modelo===id?'on':''}" onclick="aplicarModelo('${id}')">${m.nome}</button>`).join('');
+}
+function renderPaletas(){
+  el('paletas').innerHTML = PALETAS.map(p=>{
+    const on = Object.keys(estado.cores).every(k=>estado.cores[k].toLowerCase()===p.c[k].toLowerCase());
+    return `<div class="pal ${on?'on':''}" onclick="aplicarPaleta('${p.id}')">
+      <div class="faixas"><i style="background:${p.c.hero}"></i><i style="background:${p.c.ouro}"></i><i style="background:${p.c.fundo}"></i></div>
+      <div class="nm">${p.nome}</div></div>`;
+  }).join('');
+}
+function renderPares(){
+  el('pares').innerHTML = Object.entries(FONTES).map(([id,f])=>
+    `<div class="par ${fontesIdAtual===id?'on':''}" onclick="aplicarFontes('${id}')">
+      <span class="demo" style="font-family:${f.demo}">${estado.noiva} &amp; ${estado.noivo}</span>
+      <span class="lbl">${f.nome}</span></div>`).join('');
+}
+
+// ---------------------------------------------------------------
+// Aplicar ao convite (ao vivo)
+// ---------------------------------------------------------------
+function pintar(){
+  const c = el('cena').style;
+  c.setProperty('--c-hero', estado.cores.hero);
+  c.setProperty('--c-fundo', estado.cores.fundo);
+  c.setProperty('--c-ouro', estado.cores.ouro);
+  c.setProperty('--c-tinta', estado.cores.tinta);
+  c.setProperty('--f-script', estado.fontes.script);
+  c.setProperty('--f-serif', estado.fontes.serif);
+  c.setProperty('--f-sans', estado.fontes.sans);
+}
+function iniciais(){
+  const a=(estado.noiva.trim()[0]||'A').toUpperCase(), b=(estado.noivo.trim()[0]||'B').toUpperCase();
+  return a+'&'+b;
+}
+function textos(){
+  el('casal').textContent = `${estado.noiva} & ${estado.noivo}`;
+  el('rotulo').textContent = estado.rotulo;
+  el('local').textContent = estado.local;
+  el('cidade').textContent = estado.cidade;
+  el('citacao').textContent = estado.citacao;
+  el('selo').textContent = iniciais();
+  el('selo-top').textContent = iniciais();
+  const d = new Date(estado.dataISO+'T'+(estado.hora||'00:00'));
+  const ext = isNaN(d) ? estado.dataISO : d.toLocaleDateString('pt-PT',{day:'numeric',month:'long',year:'numeric'});
+  el('quando').textContent = `${ext} · ${(estado.hora||'').replace(':','h')}`;
+}
+function seccoes(){
+  const map={ contagem:'sec-contagem', citacao:'sec-citacao', local:'sec-local', rsvp:'sec-rsvp' };
+  for(const k in map) el(map[k]).classList.toggle('esconde', !estado.seccoes[k]);
+  el('sec-mapa').classList.toggle('esconde', !estado.seccoes.mapa || !estado.seccoes.local);
+}
+function fotoNoConvite(){
+  const hero = el('hero');
+  if(estado.foto){
+    hero.classList.add('tem-foto');
+    hero.innerHTML = `<div class="foto-hero" style="background-image:url('${estado.foto}')">
+      <div class="interno">
+        <div class="rotulo" id="rotulo">${estado.rotulo}</div>
+        <div class="casal" id="casal">${estado.noiva} &amp; ${estado.noivo}</div>
+        <div class="quando" id="quando"></div>
+      </div></div>`;
+  } else {
+    hero.classList.remove('tem-foto');
+    hero.innerHTML = `<div class="selo" id="selo">${iniciais()}</div>
+      <div class="rotulo" id="rotulo"></div>
+      <div class="casal" id="casal"></div>
+      <div class="quando" id="quando"></div>`;
+  }
+  textos();
+}
+
+let timerContagem=null;
+function contagem(){
+  const box=el('contador'); const alvo=new Date(estado.dataISO+'T'+(estado.hora||'00:00'));
+  function tick(){
+    const dif=alvo-new Date();
+    if(isNaN(alvo)||dif<=0){ box.innerHTML='<div class="u"><div class="v">♥</div><div class="t">É já!</div></div>'; return; }
+    const d=Math.floor(dif/864e5),h=Math.floor(dif%864e5/36e5),m=Math.floor(dif%36e5/6e4),s=Math.floor(dif%6e4/1e3);
+    const u=(v,t)=>`<div class="u"><div class="v">${v}</div><div class="t">${t}</div></div>`;
+    box.innerHTML=u(d,'dias')+u(h,'horas')+u(m,'min')+u(s,'seg');
+  }
+  clearInterval(timerContagem); tick(); timerContagem=setInterval(tick,1000);
+}
+function petalas(){
+  const box=el('petalas'); box.innerHTML='';
+  for(let i=0;i<12;i++){ const p=document.createElement('span'); p.className='petala';
+    p.style.left=(Math.random()*100)+'%'; p.style.animationDuration=(7+Math.random()*8)+'s';
+    p.style.animationDelay=(-Math.random()*12)+'s'; const z=8+Math.random()*8; p.style.width=z+'px'; p.style.height=z+'px';
+    box.appendChild(p); }
+}
+function renderTudo(){ pintar(); fotoNoConvite(); seccoes(); contagem(); renderImpresso(); }
+
+// ---------- Cartão impresso ----------
+function dataFormal(){
+  const d=new Date(estado.dataISO+'T'+(estado.hora||'00:00'));
+  if(isNaN(d)) return estado.dataISO;
+  let s=d.toLocaleDateString('pt-PT',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  return s.charAt(0).toUpperCase()+s.slice(1);
+}
+function horaTexto(){ return estado.hora ? 'às '+estado.hora.replace(':','h') : ''; }
+function dimensionarFolha(){
+  const f=FORMATOS[estado.impressao.formato]||FORMATOS['5x7'];
+  // Escala para caber no palco (altura máx. ~ 620px)
+  const escala = Math.min(1, 620/(f.h*MM));
+  const folha=el('folha');
+  folha.style.width=(f.w*MM*escala)+'px';
+  folha.style.height=(f.h*MM*escala)+'px';
+  // dimensiona o conteúdo (definido em mm) proporcionalmente
+  el('impresso').style.transform='scale('+escala+')';
+  el('impresso').style.transformOrigin='top left';
+  el('impresso').style.width=(f.w*MM)+'px';
+  el('impresso').style.height=(f.h*MM)+'px';
+}
+function cartaoInterno(){
+  const s=estado.impressao;
+  return `${s.moldura?'<div class="moldura"></div>':''}
+    <div class="imp-conteudo">
+      <div class="imp-mono">${iniciais()}</div>
+      <div class="imp-eyebrow">${esc(estado.rotulo)}</div>
+      <div class="imp-nomes">${esc(estado.noiva)} &amp; ${esc(estado.noivo)}</div>
+      <div class="imp-div">✦</div>
+      <div class="imp-data">${esc(dataFormal())}</div>
+      <div class="imp-hora">${esc(horaTexto())}</div>
+      <div class="imp-local"><strong>${esc(estado.local)}</strong><br>${esc(estado.cidade)}</div>
+      ${s.rodape?`<div class="imp-rodape">${esc(s.rodape)}</div>`:''}
+    </div>`;
+}
+function renderImpresso(){
+  el('impresso').innerHTML=cartaoInterno();
+  el('folha').classList.toggle('marcas', estado.impressao.marcas);
+  dimensionarFolha();
+}
+function trocarVista(v){
+  estado.vista=v;
+  const dig=v==='digital';
+  el('telemovel').style.display=dig?'':'none';
+  el('folha').style.display=dig?'none':'';
+  el('v-digital').classList.toggle('on',dig);
+  el('v-impresso').classList.toggle('on',!dig);
+  el('dica-palco').textContent = dig
+    ? 'Pré-visualização ao vivo — tudo o que muda à esquerda reflete-se aqui'
+    : 'Convite de impressão — uma página, com moldura e marcas de corte à escolha';
+  el('rotulo-desc').textContent = dig ? 'Descarregar convite' : 'Descarregar para impressão';
+  if(!dig) renderImpresso();
+}
+
+// ---------------------------------------------------------------
+// Ações
+// ---------------------------------------------------------------
+function aplicarModelo(id){
+  const m=MODELOS[id]; estado.modelo=id;
+  estado.cores={...m.cores};
+  estado.seccoes={...m.seccoes};
+  fontesIdAtual=m.fontesId; estado.fontes={...FONTES[m.fontesId].v};
+  construirConsola(); renderModelos(); renderTudo();
+}
+function aplicarPaleta(id){
+  const p=PALETAS.find(x=>x.id===id); if(!p) return;
+  estado.cores={...p.c};
+  ['hero','fundo','ouro','tinta'].forEach(k=>{ const i=el('c-'+k); if(i) i.value=p.c[k]; });
+  renderPaletas(); pintar();
+}
+function aplicarFontes(id){
+  fontesIdAtual=id; estado.fontes={...FONTES[id].v};
+  renderPares(); pintar();
+}
+function alternarSeccao(id){
+  estado.seccoes[id]=!estado.seccoes[id];
+  el('sw-'+id).classList.toggle('on', estado.seccoes[id]);
+  seccoes();
+}
+function removerFoto(){ estado.foto=null; el('foto-previa').style.display='none'; el('foto-zona').style.display='block'; fotoNoConvite(); }
+
+function ligarControlos(){
+  const liga=(id,campo,fn)=>{ const i=el(id); if(!i) return; i.addEventListener('input',()=>{ estado[campo]=i.value; fn&&fn(); renderImpresso(); }); };
+  liga('f-noiva','noiva',()=>{ textos(); renderPares(); });
+  liga('f-noivo','noivo',()=>{ textos(); renderPares(); });
+  liga('f-rotulo','rotulo',fotoNoConvite);
+  liga('f-local','local',textos);
+  liga('f-cidade','cidade',textos);
+  liga('f-citacao','citacao',textos);
+  el('f-data').addEventListener('input',e=>{ estado.dataISO=e.target.value; textos(); contagem(); renderImpresso(); });
+  el('f-hora').addEventListener('input',e=>{ estado.hora=e.target.value; textos(); contagem(); renderImpresso(); });
+  el('f-formato').addEventListener('change',e=>{ estado.impressao.formato=e.target.value; renderImpresso(); });
+  el('f-rodape').addEventListener('input',e=>{ estado.impressao.rodape=e.target.value; renderImpresso(); });
+  ['hero','fundo','ouro','tinta'].forEach(k=>{
+    el('c-'+k).addEventListener('input',e=>{ estado.cores[k]=e.target.value; pintar(); renderPaletas(); });
+  });
+  el('foto-zona').addEventListener('click',()=>el('f-foto').click());
+  el('f-foto').addEventListener('change',e=>{
+    const f=e.target.files[0]; if(!f) return;
+    const r=new FileReader(); r.onload=ev=>{ estado.foto=ev.target.result;
+      el('foto-img').src=estado.foto; el('foto-previa').style.display='block'; el('foto-zona').style.display='none'; fotoNoConvite(); };
+    r.readAsDataURL(f);
+  });
+}
+
+// ---------------------------------------------------------------
+// Descarregar — encaminha conforme a vista
+// ---------------------------------------------------------------
+function descarregar(){ estado.vista==='impresso' ? descarregarImpresso() : descarregarDigital(); }
+
+function descarregarImpresso(){
+  const f=FORMATOS[estado.impressao.formato]||FORMATOS['5x7'];
+  const sangria = estado.impressao.marcas ? 3 : 0;      // mm
+  const pw=f.w+sangria*2, ph=f.h+sangria*2;             // página com sangria
+  const marcasHTML = estado.impressao.marcas ? marcasCorte(f.w,f.h,sangria) : '';
+  const cartao = cartaoInterno();
+  const html = `<!DOCTYPE html><html lang="pt"><head><meta charset="UTF-8">
+<title>Convite impresso · ${esc(estado.noiva)} & ${esc(estado.noivo)}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=EB+Garamond:ital,wght@0,500;0,600;1,500&family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Pinyon+Script&family=Great+Vibes&family=Tangerine:wght@700&family=Jost:wght@300;400;500&family=Montserrat:wght@300;400;500&family=Josefin+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{--c-hero:${estado.cores.hero};--c-fundo:${estado.cores.fundo};--c-ouro:${estado.cores.ouro};--c-tinta:${estado.cores.tinta};
+--f-script:${estado.fontes.script};--f-serif:${estado.fontes.serif};--f-sans:${estado.fontes.sans};}
+*{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+html,body{margin:0}
+@page{size:${pw}mm ${ph}mm;margin:0}
+.pagina{position:relative;width:${pw}mm;height:${ph}mm;margin:0 auto;background:var(--c-fundo);overflow:hidden}
+.cartao-imp{position:absolute;left:${sangria}mm;top:${sangria}mm;width:${f.w}mm;height:${f.h}mm;background:var(--c-fundo);
+  color:var(--c-tinta);display:flex;align-items:center;justify-content:center;text-align:center;font-family:var(--f-sans)}
+.moldura{position:absolute;inset:6mm;border:0.4mm solid var(--c-ouro)}
+.moldura::after{content:'';position:absolute;inset:1.5mm;border:0.2mm solid var(--c-ouro);opacity:.5}
+.imp-conteudo{position:relative;z-index:2;padding:16mm 13mm}
+.imp-mono{width:17mm;height:17mm;margin:0 auto 4mm;border:0.5mm solid var(--c-ouro);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--f-serif);font-weight:700;font-size:6.6mm;color:var(--c-ouro)}
+.imp-eyebrow{font-family:var(--f-serif);text-transform:uppercase;letter-spacing:1.3mm;font-size:2.6mm;color:var(--c-ouro);line-height:1.5}
+.imp-nomes{font-family:var(--f-script);font-size:17mm;line-height:1.02;color:var(--c-tinta);margin:1.5mm 0}
+.imp-div{display:flex;align-items:center;justify-content:center;gap:2mm;color:var(--c-ouro);margin:4mm auto;width:55%;font-size:3mm}
+.imp-div::before,.imp-div::after{content:'';height:0.3mm;flex:1;background:var(--c-ouro);opacity:.6}
+.imp-data{font-family:var(--f-serif);font-size:5mm;color:var(--c-tinta)}
+.imp-hora{font-family:var(--f-serif);font-size:3.7mm;color:var(--c-ouro);margin-top:1mm;letter-spacing:.4mm}
+.imp-local{font-size:3.3mm;line-height:1.7;margin-top:5mm;color:var(--c-tinta)}.imp-local strong{font-weight:500}
+.imp-rodape{font-size:2.8mm;color:var(--c-tinta);opacity:.72;margin-top:6mm;font-style:italic}
+.cmark{position:absolute;background:#000}
+.barra-imp{position:fixed;top:10px;left:50%;transform:translateX(-50%);background:#16261E;color:#FBF8F1;border:none;
+  font-family:sans-serif;font-size:14px;padding:.6rem 1.2rem;border-radius:50px;cursor:pointer;box-shadow:0 8px 20px rgba(0,0,0,.3);z-index:99}
+@media print{.barra-imp{display:none}}
+</style></head><body>
+<button class="barra-imp" onclick="window.print()">Imprimir / Guardar como PDF</button>
+<div class="pagina">
+  <div class="cartao-imp">${cartao}</div>
+  ${marcasHTML}
+</div>
+</body></html>`;
+  baixarHTML(html, 'Convite-Impresso-'+estado.noiva.replace(/\s+/g,'')+'-'+estado.noivo.replace(/\s+/g,'')+'.html');
+}
+
+// Marcas de corte nos quatro cantos (dentro da sangria)
+function marcasCorte(w,h,s){
+  const L=4;
+  const v=(x,y)=>`<div class="cmark" style="left:${x}mm;top:${y}mm;width:0.2mm;height:${L}mm"></div>`;
+  const hh=(x,y)=>`<div class="cmark" style="left:${x}mm;top:${y}mm;width:${L}mm;height:0.2mm"></div>`;
+  const out=[];
+  [[s,s,-1,-1],[s+w,s,1,-1],[s,s+h,-1,1],[s+w,s+h,1,1]].forEach(([x,y,dx,dy])=>{
+    out.push(v(x-0.1, dy<0? y-L : y));
+    out.push(hh(dx<0? x-L : x, y-0.1));
+  });
+  return out.join('');
+}
+
+function baixarHTML(html, nome){
+  const blob=new Blob([html],{type:'text/html;charset=utf-8'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download=nome; document.body.appendChild(a); a.click();
+  setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1500);
+}
+
+// ---------------------------------------------------------------
+// Descarregar convite digital (HTML autossuficiente)
+// ---------------------------------------------------------------
+function descarregarDigital(){
+  const d=new Date(estado.dataISO+'T'+(estado.hora||'00:00'));
+  const ext=isNaN(d)?estado.dataISO:d.toLocaleDateString('pt-PT',{day:'numeric',month:'long',year:'numeric'});
+  const quando=`${ext} · ${(estado.hora||'').replace(':','h')}`;
+  const heroHTML = estado.foto
+    ? `<div class="foto-hero" style="background-image:url('${estado.foto}')"><div class="interno">
+         <div class="rotulo">${esc(estado.rotulo)}</div>
+         <div class="casal">${esc(estado.noiva)} &amp; ${esc(estado.noivo)}</div>
+         <div class="quando">${esc(quando)}</div></div></div>`
+    : `<div class="selo">${esc(iniciais())}</div>
+       <div class="rotulo">${esc(estado.rotulo)}</div>
+       <div class="casal">${esc(estado.noiva)} &amp; ${esc(estado.noivo)}</div>
+       <div class="quando">${esc(quando)}</div>`;
+  const s=estado.seccoes;
+  const html = `<!DOCTYPE html><html lang="pt"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Convite · ${esc(estado.noiva)} & ${esc(estado.noivo)}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=EB+Garamond:ital,wght@0,500;0,600;1,500&family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Pinyon+Script&family=Great+Vibes&family=Tangerine:wght@700&family=Jost:wght@300;400;500&family=Montserrat:wght@300;400;500&family=Josefin+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{--c-hero:${estado.cores.hero};--c-fundo:${estado.cores.fundo};--c-ouro:${estado.cores.ouro};--c-tinta:${estado.cores.tinta};
+--f-script:${estado.fontes.script};--f-serif:${estado.fontes.serif};--f-sans:${estado.fontes.sans};}
+*{box-sizing:border-box}body{margin:0;font-family:var(--f-sans);color:var(--c-tinta);background:var(--c-fundo);min-height:100vh}
+.wrap{max-width:520px;margin:0 auto;position:relative;overflow:hidden;min-height:100vh}
+.petalas{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+.petala{position:absolute;top:-20px;width:11px;height:11px;border-radius:0 70% 0 70%;background:var(--c-ouro);opacity:.35;animation:cair linear infinite}
+@keyframes cair{0%{transform:translateY(-8vh) rotate(0);opacity:0}12%{opacity:.4}100%{transform:translateY(120vh) rotate(320deg);opacity:0}}
+@media (prefers-reduced-motion:reduce){.petala{display:none}}
+.hero{background:var(--c-hero);color:var(--c-fundo);text-align:center;padding:3rem 1.5rem 2.4rem;position:relative;z-index:2}
+.hero.foto{padding:0}
+.foto-hero{position:relative;height:320px;display:flex;align-items:flex-end;justify-content:center;background-size:cover;background-position:center}
+.foto-hero::after{content:'';position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.6),rgba(0,0,0,.05) 55%)}
+.foto-hero .interno{position:relative;z-index:2;padding:1.8rem 1.3rem;color:#fff}
+.selo{width:70px;height:70px;margin:0 auto 1rem;border:2px solid var(--c-ouro);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--f-serif);font-weight:700;font-size:1.3rem;color:var(--c-ouro)}
+.rotulo{font-family:var(--f-serif);letter-spacing:4px;text-transform:uppercase;font-size:.72rem;opacity:.85}
+.casal{font-family:var(--f-script);font-size:3.8rem;line-height:1.02;margin:.3rem 0 .1rem;color:#fff}
+.quando{font-family:var(--f-serif);font-size:1.05rem;opacity:.92}
+.corpo{padding:2.2rem 1.7rem 3rem;position:relative;z-index:2}
+.divisor{display:flex;align-items:center;gap:.7rem;color:var(--c-ouro);margin:1.5rem 0}
+.divisor::before,.divisor::after{content:'';height:1px;flex:1;background:linear-gradient(90deg,transparent,var(--c-ouro),transparent)}
+.contador{display:flex;justify-content:center;gap:.9rem}.u{text-align:center;min-width:58px}
+.u .v{font-family:var(--f-serif);font-size:2.1rem;font-weight:700;color:var(--c-tinta);line-height:1}
+.u .t{font-size:.64rem;text-transform:uppercase;letter-spacing:1px;color:var(--c-ouro)}
+.citacao{text-align:center;font-family:var(--f-serif);font-style:italic;font-size:1.3rem;line-height:1.5;padding:.4rem}
+.local{text-align:center;font-size:1rem;line-height:1.7}.local strong{font-weight:500}
+.btn{display:inline-flex;align-items:center;justify-content:center;width:100%;border:none;border-radius:50px;padding:.9rem;font-family:var(--f-sans);font-weight:500;font-size:1rem;margin-top:.6rem;text-decoration:none;cursor:pointer}
+.btn-ouro{background:var(--c-ouro);color:#fff}.btn-linha{background:transparent;border:1.5px solid var(--c-ouro);color:var(--c-tinta)}
+</style></head><body><div class="wrap">
+<div class="petalas" id="petalas"></div>
+<div class="hero ${estado.foto?'foto':''}">${heroHTML}</div>
+<div class="corpo">
+${s.contagem?`<div class="contador" id="contador"></div><div class="divisor">✦</div>`:''}
+${s.citacao?`<p class="citacao">${esc(estado.citacao)}</p><div class="divisor">✦</div>`:''}
+${s.local?`<div class="local"><strong>${esc(estado.local)}</strong><br>${esc(estado.cidade)}</div>
+${s.mapa?`<a class="btn btn-linha" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(estado.local+' '+estado.cidade)}" target="_blank" rel="noopener">Ver localização no mapa</a>`:''}`:''}
+${s.rsvp?`<div class="divisor">✦</div><button class="btn btn-ouro">Confirmar presença</button>`:''}
+</div></div>
+<script>
+(function(){var box=document.getElementById('petalas');if(box){for(var i=0;i<12;i++){var p=document.createElement('span');p.className='petala';p.style.left=(Math.random()*100)+'%';p.style.animationDuration=(7+Math.random()*8)+'s';p.style.animationDelay=(-Math.random()*12)+'s';var z=8+Math.random()*8;p.style.width=z+'px';p.style.height=z+'px';box.appendChild(p);}}
+var c=document.getElementById('contador');if(c){var alvo=new Date(${JSON.stringify(estado.dataISO+'T'+(estado.hora||'00:00'))});function t(){var dif=alvo-new Date();if(isNaN(alvo)||dif<=0){c.innerHTML='<div class="u"><div class="v">&#9829;</div><div class="t">É já!</div></div>';return;}var d=Math.floor(dif/864e5),h=Math.floor(dif%864e5/36e5),m=Math.floor(dif%36e5/6e4),s=Math.floor(dif%6e4/1e3);function u(v,l){return '<div class="u"><div class="v">'+v+'</div><div class="t">'+l+'</div></div>';}c.innerHTML=u(d,'dias')+u(h,'horas')+u(m,'min')+u(s,'seg');}t();setInterval(t,1000);}
+})();
+<\/script></body></html>`;
+  const blob=new Blob([html],{type:'text/html;charset=utf-8'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download='Convite-'+estado.noiva.replace(/\s+/g,'')+'-'+estado.noivo.replace(/\s+/g,'')+'.html';
+  document.body.appendChild(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1500);
+}
+function esc(s){ return (s??'').toString().replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m])); }
+
+// ---------------------------------------------------------------
+// Arranque
+// ---------------------------------------------------------------
+renderModelos(); construirConsola(); renderTudo(); petalas();
+</script>
+</body>
+</html>
