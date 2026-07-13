@@ -19,7 +19,11 @@ O sistema foi desenhado para **coexistir** com a sua lista atual: cria tabelas n
 | `convite.php` | Página pública de confirmação de presença + passe de entrada com QR. |
 | `porteiro.php` | Página do porteiro: leitura de QR por câmara e busca manual. |
 | `impressos.php` | Etiquetas dos convites físicos com QR, prontas a imprimir. |
+| `editor-modelos.php` | **Editor de modelos** (Fase 1): galeria, cores, tipografia, secções e textos, com pré-visualização ao vivo. |
+| `modelos.php` | Galeria de modelos (predefinições de paleta e tipografia) e registo de tipos de letra. |
+| `design.php` | Camada de personalização: esquema `cw_designs`, design padrão e o construtor de tema (funções puras). |
 | `assets/estilo.css` | Estilo visual, alinhado com o convite (verde-floresta, dourado e marfim). |
+| `assets/convite-base.html` | Modelo do convite digital, com marcadores (`{{...}}`) para cores, tipografia e textos. |
 
 ---
 
@@ -28,6 +32,7 @@ O sistema foi desenhado para **coexistir** com a sua lista atual: cria tabelas n
 - **`cw_convites`** — o convite é a unidade central: código único, nome a exibir, sufixo opcional, tipo (`digital`/`fisico`/`ambos`), lado, número de lugares, mesa, telefone, estados de RSVP e de entrada, mensagens e observações.
 - **`cw_convidados`** — as pessoas nominais de cada convite (com RSVP e presença individuais).
 - **`cw_mesas`** — mesas com capacidade e ocupação.
+- **`cw_designs`** — o design ativo do convite, guardado em JSON (paleta, tipografia, secções e textos). Criada automaticamente.
 
 ---
 
@@ -74,6 +79,17 @@ O sistema tenta primeiro a ligação `local` (útil para testes em XAMPP/Wamp) e
 **Porteiro.** Na página de entrada, o porteiro lê o QR com a câmara ou procura pelo nome/código. Vê o estado do convite e regista a entrada (de todos ou de cada pessoa). O contador de presenças atualiza em tempo real.
 
 **Convites físicos.** A página *Convites físicos* gera as etiquetas com o nome e o QR de cada convite, prontas a imprimir para os envelopes.
+
+**Modelo do convite (Fase 1).** Em *Modelo do convite* personaliza o aspeto sem tocar no código:
+
+- **Galeria de modelos** — pontos de partida (Esmeralda & Ouro, Borgonha & Rosé, Azul-Noite & Champanhe, Terracota & Sálvia) que definem paleta e tipografia.
+- **Paleta** — 11 cores que se propagam por todo o convite (incluindo o código QR).
+- **Tipografia** — três papéis (títulos, corpo e manuscrita). As fontes marcadas *(web)* precisam de internet; o modelo Esmeralda usa fontes locais e mantém o convite totalmente offline.
+- **Secções** — ligue/desligue a história, o interlúdio, a contagem decrescente, o cronograma, o manual, as pétalas e a música.
+- **Textos** — edite as palavras do convite (aceita `<br>` para quebrar linhas).
+- **Data e casal** — os nomes e a data alimentam automaticamente o título, a contagem decrescente, o dia da semana e o botão de calendário.
+
+Tudo é mostrado numa **pré-visualização ao vivo**; ao **Guardar**, o convite público passa a refletir o novo modelo. O design fica guardado em `cw_designs` — o convite `assets/convite-base.html` permanece intacto, apenas recebe as personalizações na altura de servir.
 
 ---
 

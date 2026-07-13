@@ -29,6 +29,22 @@ Detalhes de instalação e utilização em [`casamento_web/LEIA-ME.md`](casament
 > credenciais e palavras-passe substituídas por marcadores. Preencha os valores
 > reais apenas no seu servidor (ou num `config.local.php`, ignorado pelo git).
 
+### Fase 1 — Modelos (em curso) ✅
+
+Personalização do convite **por configuração**, construída sobre a app atual, sem
+reescrever o convite:
+
+- **Galeria de modelos** — quatro predefinições de paleta e tipografia
+  (Esmeralda & Ouro, Borgonha & Rosé, Azul-Noite & Champanhe, Terracota & Sálvia).
+- **Editor visual** (`casamento_web/editor-modelos.php`) com **pré-visualização ao
+  vivo**: cores (11 papéis), tipografia (3 papéis), secções on/off, textos e dados
+  do casal/data.
+- O aspeto é guardado em JSON (`cw_designs`) e aplicado ao servir o convite —
+  o `convite-base.html` mantém-se intacto, agora com marcadores (`{{...}}`) e a
+  paleta/tipografia em variáveis CSS.
+- Camada de tema em funções puras (`design.php`, `modelos.php`), com testes de
+  renderização independentes da base de dados.
+
 ### `prototipos/` — protótipos de interface
 - `editor-convites.html` — **protótipo do Atelier de Convites** (editor visual),
   para explorar a experiência da Fase 2.
@@ -48,7 +64,7 @@ seguinte.
 | Fase | Objetivo | Entregáveis principais |
 |---|---|---|
 | **0 — Fundação** | Infraestrutura própria e multi-inquilinência | Alojamento, base de dados gerida, armazenamento de imagens, contas e eventos |
-| **1 — Modelos** | Personalizar o convite por configuração | Galeria de modelos, edição de cores, textos, fotos e secções |
+| **1 — Modelos** *(em curso)* | Personalizar o convite por configuração | Galeria de modelos, edição de cores, textos e secções ✅ · falta: gestão de fotos e música por evento |
 | **2 — Editor** | Liberdade total de desenho e impressão | Editor visual de tela, exportação para impressão pronta a usar |
 | **3 — Ecossistema** | Completar a experiência do casamento | Edição de imagem, plano de mesas visual, WhatsApp e restantes módulos |
 
