@@ -105,6 +105,7 @@ $s = estatisticas($conn);
 <div class="topo">
   <h1>Convidados</h1><span class="badge"><?= $H($nomeEvento) ?></span>
   <span class="sp"></span>
+  <a href="envios.php">Enviar WhatsApp</a>
   <a href="mesas-plano.php">Plano de mesas</a>
   <a href="<?= $H(urlPainel()) ?>">← Painel</a>
 </div>
