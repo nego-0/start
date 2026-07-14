@@ -26,7 +26,7 @@ O sistema foi desenhado para **coexistir** com a sua lista atual: cria tabelas n
 | `convidados.php` | **Convidados & RSVP por conta** (Fase 0): lista, criação/edição/remoção de convites do evento, links de convite/RSVP e estado de confirmação. Isolado por evento. |
 | `mesas-plano.php` | **Plano de mesas visual** (Fase 3): criar mesas, adicionar convidados e arrastá-los para as mesas, com ocupação ao vivo. Isolado por evento. |
 | `envios.php` | **Convites por WhatsApp** (Fase 3): modelos (convite/lembrete/agradecimento), personalização por convidado e envio via `wa.me` num clique. Isolado por evento. |
-| `editor-tela.php` | **Editor visual de tela** (Fase 2): desenho livre com Fabric.js (texto, imagens, formas, camadas, desfazer/refazer), exporta PNG/PDF. |
+| `editor-tela.php` | **Editor visual de tela** (Fase 2): desenho livre com Fabric.js (texto, imagens, formas, camadas, desfazer/refazer), **edição de imagem** (brilho/contraste/saturação, P&B/sépia) e exportação PNG/PDF. |
 | `impresso.php` | Persistência da tela do editor (`cw_impressos`) e ponte do design para o editor. |
 | `assets/vendor/` | Bibliotecas locais: `fabric.min.js` (editor de tela) e `jspdf.umd.min.js` (exportação PDF). |
 | `modelos.php` | Galeria de modelos (predefinições de paleta e tipografia) e registo de tipos de letra. |

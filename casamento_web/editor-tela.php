@@ -161,6 +161,19 @@ $H = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
       <label>Cor do traço</label>
       <input type="color" class="cor" id="fStroke" oninput="aplicar('stroke', this.value)">
     </div>
+    <div id="propImagem" style="display:none">
+      <label>Brilho <span id="ivBrilho"></span></label>
+      <input type="range" id="iBrilho" min="-60" max="60" value="0" oninput="filtro('brilho', +this.value/100)">
+      <label>Contraste <span id="ivContraste"></span></label>
+      <input type="range" id="iContraste" min="-60" max="60" value="0" oninput="filtro('contraste', +this.value/100)">
+      <label>Saturação <span id="ivSaturacao"></span></label>
+      <input type="range" id="iSaturacao" min="-100" max="100" value="0" oninput="filtro('saturacao', +this.value/100)">
+      <div class="row" style="margin-top:.5rem">
+        <button class="btn" onclick="filtroToggle('pb')">P&amp;B</button>
+        <button class="btn" onclick="filtroToggle('sepia')">Sépia</button>
+        <button class="btn" onclick="reporImagem()">Repor</button>
+      </div>
+    </div>
     <div id="propComum" style="display:none">
       <label>Opacidade <span id="pOpV"></span></label>
       <input type="range" id="pOp" min="10" max="100" oninput="aplicar('opacity', (+this.value)/100)">
@@ -283,7 +296,43 @@ $H = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
     document.getElementById('propComum').style.display = o?'block':'none';
     document.getElementById('propTexto').style.display = ehTexto(o)?'block':'none';
     document.getElementById('propForma').style.display = (o&&!ehTexto(o)&&o.type!=='image')?'block':'none';
+    document.getElementById('propImagem').style.display = (o&&o.type==='image')?'block':'none';
     if(o) sincronizar();
+  }
+
+  // ---------- Filtros de imagem (edição de imagem, Fase 2) ----------
+  function idxFiltro(o, tipo){ o.filters=o.filters||[]; for(var i=0;i<o.filters.length;i++){ if(o.filters[i].__tipo===tipo) return i; } return -1; }
+  function novoFiltro(tipo, val){
+    var F=fabric.Image.filters, f;
+    if(tipo==='brilho')    f=new F.Brightness({brightness:val});
+    else if(tipo==='contraste') f=new F.Contrast({contrast:val});
+    else if(tipo==='saturacao') f=new F.Saturation({saturation:val});
+    else if(tipo==='pb')    f=new F.Grayscale();
+    else if(tipo==='sepia') f=new F.Sepia();
+    if(f) f.__tipo=tipo; return f;
+  }
+  function filtro(tipo, val){
+    var o=ativo(); if(!o||o.type!=='image') return;
+    var i=idxFiltro(o,tipo);
+    if(val===0){ if(i>=0) o.filters.splice(i,1); }
+    else { var f=novoFiltro(tipo,val); if(i>=0) o.filters[i]=f; else (o.filters=o.filters||[]).push(f); }
+    o.applyFilters(); canvas.requestRenderAll();
+    document.getElementById('ivBrilho').textContent = document.getElementById('iBrilho').value;
+    document.getElementById('ivContraste').textContent = document.getElementById('iContraste').value;
+    document.getElementById('ivSaturacao').textContent = document.getElementById('iSaturacao').value;
+  }
+  function filtroToggle(tipo){
+    var o=ativo(); if(!o||o.type!=='image') return;
+    var i=idxFiltro(o,tipo);
+    if(i>=0) o.filters.splice(i,1); else (o.filters=o.filters||[]).push(novoFiltro(tipo));
+    o.applyFilters(); canvas.requestRenderAll(); registar();
+  }
+  function reporImagem(){
+    var o=ativo(); if(!o||o.type!=='image') return;
+    o.filters=[]; o.applyFilters(); canvas.requestRenderAll();
+    ['iBrilho','iContraste','iSaturacao'].forEach(function(id){ document.getElementById(id).value=0; });
+    ['ivBrilho','ivContraste','ivSaturacao'].forEach(function(id){ document.getElementById(id).textContent=''; });
+    registar();
   }
   function sincronizar(){
     var o=ativo(); if(!o) return;

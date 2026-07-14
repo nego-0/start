@@ -105,7 +105,7 @@ seguinte.
 |---|---|---|
 | **0 — Fundação** *(em curso)* | Infraestrutura própria e multi-inquilinência | Contas, eventos, isolamento por evento ✅ · convidados/RSVP por conta ✅ · falta: alojamento e BD geridos, armazenamento de imagens, check-in por conta |
 | **1 — Modelos** *(em curso)* | Personalizar o convite por configuração | Galeria de modelos, edição de cores, textos e secções ✅ · falta: gestão de fotos e música por evento |
-| **2 — Editor** *(em curso)* | Liberdade total de desenho e impressão | Convite impresso (A5/A6/quadrado, molduras, verso) ✅ · editor visual de tela Fabric.js (PNG/PDF) ✅ · falta: CMYK e edição de imagem |
+| **2 — Editor** *(em curso)* | Liberdade total de desenho e impressão | Convite impresso (A5/A6/quadrado, molduras, verso) ✅ · editor de tela Fabric.js (PNG/PDF) ✅ · edição de imagem (brilho/contraste/saturação, P&B/sépia) ✅ · falta: recorte interativo e CMYK (pré-impressão) |
 | **3 — Ecossistema** *(em curso)* | Completar a experiência do casamento | Plano de mesas visual ✅ · convites/lembretes por WhatsApp ✅ · falta: álbum partilhado, lista de presentes |
 
 As duas decisões que condicionam tudo o resto são a **Fase 0** (infraestrutura e
