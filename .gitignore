@@ -12,7 +12,8 @@ Thumbs.db
 
 # Dependências (fases futuras)
 node_modules/
-vendor/
+/vendor/
+casamento_web/vendor/
 .env
 .env.*
 !.env.example

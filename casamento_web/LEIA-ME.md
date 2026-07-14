@@ -20,7 +20,10 @@ O sistema foi desenhado para **coexistir** com a sua lista atual: cria tabelas n
 | `porteiro.php` | Página do porteiro: leitura de QR por câmara e busca manual. |
 | `impressos.php` | Etiquetas dos convites físicos com QR, prontas a imprimir. |
 | `editor-modelos.php` | **Editor de modelos** (Fase 1): galeria, cores, tipografia, secções e textos, com pré-visualização ao vivo. |
-| `convite-impresso.php` | **Convite impresso** (Fase 2): cartão A5 pronto a imprimir, com sangria de 3 mm e marcas de corte, a partir do mesmo design. |
+| `convite-impresso.php` | **Convite impresso** (Fase 2): cartão pronto a imprimir (A5/A6/quadrado), com sangria de 3 mm, marcas de corte, molduras e verso opcional. |
+| `editor-tela.php` | **Editor visual de tela** (Fase 2): desenho livre com Fabric.js (texto, imagens, formas, camadas, desfazer/refazer), exporta PNG/PDF. |
+| `impresso.php` | Persistência da tela do editor (`cw_impressos`) e ponte do design para o editor. |
+| `assets/vendor/` | Bibliotecas locais: `fabric.min.js` (editor de tela) e `jspdf.umd.min.js` (exportação PDF). |
 | `modelos.php` | Galeria de modelos (predefinições de paleta e tipografia) e registo de tipos de letra. |
 | `design.php` | Camada de personalização: esquema `cw_designs`, design padrão e o construtor de tema (funções puras). |
 | `assets/estilo.css` | Estilo visual, alinhado com o convite (verde-floresta, dourado e marfim). |
@@ -92,7 +95,9 @@ O sistema tenta primeiro a ligação `local` (útil para testes em XAMPP/Wamp) e
 
 Tudo é mostrado numa **pré-visualização ao vivo**; ao **Guardar**, o convite público passa a refletir o novo modelo. O design fica guardado em `cw_designs` — o convite `assets/convite-base.html` permanece intacto, apenas recebe as personalizações na altura de servir.
 
-**Convite impresso (Fase 2).** A partir do **mesmo design**, a página *Convite impresso* gera um cartão **A5 (corte 148×210 mm)** com **sangria de 3 mm** e **marcas de corte**, pronto a imprimir ou a guardar em PDF (botão *Imprimir / Guardar PDF*). Pode escolher a moldura (dupla, simples ou cantos). Assim, um único desenho serve o convite digital **e** o convite físico. A conversão para CMYK é o passo de pré-impressão feito pela gráfica.
+**Convite impresso (Fase 2).** A partir do **mesmo design**, a página *Convite impresso* gera um cartão pronto a imprimir com **sangria de 3 mm** e **marcas de corte**, em três **tamanhos** (A5 148×210, A6 105×148 ou quadrado 140×140), **molduras** à escolha (dupla, simples, cantos, vinha) e **verso** opcional (com monograma e citação). Botão *Imprimir / Guardar PDF*. Assim, um único desenho serve o convite digital **e** o convite físico. A conversão para CMYK é o passo de pré-impressão feito pela gráfica.
+
+**Editor de tela (Fase 2).** Para liberdade total, a página *Editor de tela* abre uma **tela de desenho** (Fabric.js) já preenchida com o modelo do design. Pode **adicionar e mover** texto, imagens e formas, gerir **camadas**, **desfazer/refazer**, e **exportar PNG (300 dpi) ou PDF** no tamanho exato. O desenho é guardado em `cw_impressos`. As bibliotecas (Fabric.js e jsPDF) são servidas localmente em `assets/vendor/`.
 
 ---
 

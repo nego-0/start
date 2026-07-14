@@ -27,11 +27,23 @@ if ($preview) {
     $design = carregarDesignAtivo($conn);
 }
 
-$molduras = ['dupla', 'simples', 'cantos'];
+$molduras = ['dupla', 'simples', 'cantos', 'vinha'];
 $moldura  = in_array($_GET['moldura'] ?? '', $molduras, true) ? $_GET['moldura'] : 'dupla';
+
+// Tamanhos de corte (mm); a media acrescenta 3 mm de sangria de cada lado.
+$tamanhos = [
+    'a5'       => ['nome' => 'A5 (148×210)',   'w' => 148, 'h' => 210, 'safe' => 12],
+    'a6'       => ['nome' => 'A6 (105×148)',   'w' => 105, 'h' => 148, 'safe' => 9],
+    'quadrado' => ['nome' => 'Quadrado (140)', 'w' => 140, 'h' => 140, 'safe' => 11],
+];
+$tamId = isset($tamanhos[$_GET['tamanho'] ?? '']) ? $_GET['tamanho'] : 'a5';
+$T = $tamanhos[$tamId];
+$mediaW = $T['w'] + 6; $mediaH = $T['h'] + 6;               // + sangria 3mm x2
+$verso  = isset($_GET['verso']) && $_GET['verso'] === '1';
 
 $tok = mapaTextos($design);
 $G = fn($k) => $tok[$k] ?? '';
+$H = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
 
 $estilos = cssImportacaoFontes($design) . cssFontesLocais() . cssVariaveis($design);
 ?>
@@ -44,9 +56,9 @@ $estilos = cssImportacaoFontes($design) . cssFontesLocais() . cssVariaveis($desi
 <style>
 <?= $estilos ?>
 
-/* Medidas de impressão: A5 (corte 148×210) + sangria 3 mm => 154×216 */
-:root{ --bleed:3mm; --trim-w:148mm; --trim-h:210mm; --media-w:154mm; --media-h:216mm; --safe:12mm; }
-@page{ size:154mm 216mm; margin:0; }
+/* Medidas de impressão: corte + sangria 3 mm de cada lado */
+:root{ --bleed:3mm; --trim-w:<?= $T['w'] ?>mm; --trim-h:<?= $T['h'] ?>mm; --media-w:<?= $mediaW ?>mm; --media-h:<?= $mediaH ?>mm; --safe:<?= $T['safe'] + 3 ?>mm; }
+@page{ size:<?= $mediaW ?>mm <?= $mediaH ?>mm; margin:0; }
 *{ margin:0; padding:0; box-sizing:border-box; }
 body{ font-family:var(--ff-sans); background:#3b3b3b; color:var(--text); }
 
@@ -85,8 +97,15 @@ body{ font-family:var(--ff-sans); background:#3b3b3b; color:var(--text); }
 .moldura-dupla .cartao{ border:1.4pt solid var(--gold); outline:.6pt solid var(--gold); outline-offset:2.2mm; }
 .moldura-simples .cartao{ border:1pt solid var(--gold-soft); }
 .moldura-cantos .cartao{ border:none; position:relative; }
+.moldura-vinha .cartao{ border:.8pt solid var(--gold-soft); position:relative; }
 .cantos-svg{ position:absolute; inset:0; pointer-events:none; }
-.moldura-dupla .cantos-svg, .moldura-simples .cantos-svg{ display:none; }
+.moldura-dupla .cantos-svg, .moldura-simples .cantos-svg, .moldura-vinha .cantos-svg{ display:none; }
+/* Molduras: cantos de folhas (vinha) */
+.vinha-svg{ position:absolute; pointer-events:none; width:26mm; height:26mm; display:none; }
+.moldura-vinha .vinha-svg{ display:block; }
+.vinha-svg path{ fill:none; stroke:var(--gold-soft); stroke-width:1; }
+.vinha-svg.tl{ top:1mm; left:1mm } .vinha-svg.tr{ top:1mm; right:1mm; transform:scaleX(-1) }
+.vinha-svg.bl{ bottom:1mm; left:1mm; transform:scaleY(-1) } .vinha-svg.br{ bottom:1mm; right:1mm; transform:scale(-1) }
 
 .mono{ width:20mm; height:20mm; border-radius:50%; border:.8pt solid var(--gold); color:var(--gold);
   display:flex; align-items:center; justify-content:center; font-family:var(--ff-script); font-size:20pt; margin-bottom:6mm; }
@@ -101,11 +120,20 @@ body{ font-family:var(--ff-sans); background:#3b3b3b; color:var(--text); }
 .local{ font-family:var(--ff-sans); font-size:9.5pt; line-height:1.5; color:var(--text); margin-top:6mm; }
 .prazo{ font-family:var(--ff-serif); font-style:italic; font-size:9pt; color:var(--gold); margin-top:6mm; }
 
+/* Verso do cartão */
+.folha.verso{ background:var(--forest-deep); }
+.verso .cartao{ color:var(--gold-pale); }
+.verso .v-mono{ width:26mm; height:26mm; border-radius:50%; border:.8pt solid var(--gold-soft); color:var(--gold-soft);
+  display:flex; align-items:center; justify-content:center; font-family:var(--ff-script); font-size:26pt; margin-bottom:8mm; }
+.verso .v-verso{ font-family:var(--ff-serif); font-style:italic; font-size:13pt; line-height:1.6; color:var(--gold-pale); max-width:80%; }
+.verso .v-local{ font-family:var(--ff-serif); font-size:11pt; letter-spacing:.18em; text-transform:uppercase; color:var(--gold-soft); margin-top:9mm; }
+
 @media print{
   .no-print{ display:none !important; }
   body{ background:#fff; }
-  .palco{ padding:0; }
+  .palco{ padding:0; display:block; }
   .folha{ box-shadow:none; }
+  .folha + .folha{ page-break-before:always; }
 }
 </style>
 </head>
@@ -113,25 +141,43 @@ body{ font-family:var(--ff-sans); background:#3b3b3b; color:var(--text); }
 <div class="barra no-print">
   <a href="index.php">← Painel</a>
   <a href="editor-modelos.php">Editar modelo</a>
+  <a href="editor-tela.php">Editor de tela ↗</a>
   <span class="sp"></span>
+  <label>Tamanho:
+    <select onchange="setParam('tamanho', this.value)">
+      <?php foreach ($tamanhos as $id => $t): ?>
+        <option value="<?= $id ?>"<?= $id === $tamId ? ' selected' : '' ?>><?= $H($t['nome']) ?></option>
+      <?php endforeach; ?>
+    </select>
+  </label>
   <label>Moldura:
-    <select onchange="location.search='?moldura='+this.value">
+    <select onchange="setParam('moldura', this.value)">
       <?php foreach ($molduras as $m): ?>
         <option value="<?= $m ?>"<?= $m === $moldura ? ' selected' : '' ?>><?= ucfirst($m) ?></option>
       <?php endforeach; ?>
     </select>
   </label>
+  <label style="display:inline-flex;align-items:center;gap:.35rem">
+    <input type="checkbox"<?= $verso ? ' checked' : '' ?> onchange="setParam('verso', this.checked?'1':'0')"> Verso
+  </label>
   <button class="btn-print" onclick="window.print()">Imprimir / Guardar PDF</button>
 </div>
 
+<?php
+// Marcas de corte (reutilizadas em cada página)
+$marcasCorte = '<span class="corte h c-tl-h"></span><span class="corte v c-tl-v"></span>'
+             . '<span class="corte h c-tr-h"></span><span class="corte v c-tr-v"></span>'
+             . '<span class="corte h c-bl-h"></span><span class="corte v c-bl-v"></span>'
+             . '<span class="corte h c-br-h"></span><span class="corte v c-br-v"></span>';
+$vinha = '<svg class="vinha-svg tl" viewBox="0 0 100 100" aria-hidden="true"><path d="M6 94 C6 50 30 18 78 8 M6 66 C26 50 40 30 46 6 M20 84 C46 74 70 54 82 30"/></svg>'
+       . '<svg class="vinha-svg tr" viewBox="0 0 100 100" aria-hidden="true"><path d="M6 94 C6 50 30 18 78 8 M6 66 C26 50 40 30 46 6 M20 84 C46 74 70 54 82 30"/></svg>'
+       . '<svg class="vinha-svg bl" viewBox="0 0 100 100" aria-hidden="true"><path d="M6 94 C6 50 30 18 78 8 M6 66 C26 50 40 30 46 6 M20 84 C46 74 70 54 82 30"/></svg>'
+       . '<svg class="vinha-svg br" viewBox="0 0 100 100" aria-hidden="true"><path d="M6 94 C6 50 30 18 78 8 M6 66 C26 50 40 30 46 6 M20 84 C46 74 70 54 82 30"/></svg>';
+?>
 <div class="palco">
+  <!-- Frente -->
   <div class="folha moldura-<?= $moldura ?>">
-    <!-- marcas de corte -->
-    <span class="corte h c-tl-h"></span><span class="corte v c-tl-v"></span>
-    <span class="corte h c-tr-h"></span><span class="corte v c-tr-v"></span>
-    <span class="corte h c-bl-h"></span><span class="corte v c-bl-v"></span>
-    <span class="corte h c-br-h"></span><span class="corte v c-br-v"></span>
-
+    <?= $marcasCorte ?>
     <div class="seguro">
       <div class="cartao">
         <svg class="cantos-svg" viewBox="0 0 100 140" preserveAspectRatio="none" aria-hidden="true">
@@ -140,6 +186,7 @@ body{ font-family:var(--ff-sans); background:#3b3b3b; color:var(--text); }
             <path d="M98 126 V138 H86"/><path d="M14 138 H2 V126"/>
           </g>
         </svg>
+        <?= $vinha ?>
         <div class="mono"><?= $G('INICIAIS') ?></div>
         <div class="abertura"><?= $G('IMPRESSO_ABERTURA') ?></div>
         <div class="nomes"><?= $G('NOIVA') ?><span class="e">&amp;</span><?= $G('NOIVO') ?></div>
@@ -151,7 +198,29 @@ body{ font-family:var(--ff-sans); background:#3b3b3b; color:var(--text); }
       </div>
     </div>
   </div>
+
+  <?php if ($verso): ?>
+  <!-- Verso -->
+  <div class="folha verso">
+    <?= $marcasCorte ?>
+    <div class="seguro">
+      <div class="cartao">
+        <div class="v-mono"><?= $G('INICIAIS') ?></div>
+        <div class="v-verso"><?= $G('FOOTER_NOTA') ?></div>
+        <div class="v-local"><?= $G('NOIVA') ?> &amp; <?= $G('NOIVO') ?> · <?= $G('ANO') ?></div>
+      </div>
+    </div>
+  </div>
+  <?php endif; ?>
 </div>
-<p class="dica no-print">Convite de impressão A5 (corte 148×210 mm) com sangria de 3 mm e marcas de corte. Ao guardar em PDF, escolha “Tamanho real / 100%”.</p>
+<p class="dica no-print"><?= $H($T['nome']) ?> · sangria de 3 mm e marcas de corte<?= $verso ? ' · frente e verso' : '' ?>. Ao guardar em PDF, escolha “Tamanho real / 100%”.</p>
+
+<script>
+  function setParam(k, v){
+    var u = new URL(location.href);
+    if(v === '0' || v === '') u.searchParams.delete(k); else u.searchParams.set(k, v);
+    location.href = u.pathname + '?' + u.searchParams.toString();
+  }
+</script>
 </body>
 </html>
