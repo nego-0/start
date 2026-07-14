@@ -103,7 +103,7 @@ seguinte.
 | **0 — Fundação** *(em curso)* | Infraestrutura própria e multi-inquilinência | Contas, eventos e isolamento por evento ✅ · falta: convidados/RSVP por conta, alojamento e BD geridos, armazenamento de imagens |
 | **1 — Modelos** *(em curso)* | Personalizar o convite por configuração | Galeria de modelos, edição de cores, textos e secções ✅ · falta: gestão de fotos e música por evento |
 | **2 — Editor** *(em curso)* | Liberdade total de desenho e impressão | Convite impresso (A5/A6/quadrado, molduras, verso) ✅ · editor visual de tela Fabric.js (PNG/PDF) ✅ · falta: CMYK e edição de imagem |
-| **3 — Ecossistema** | Completar a experiência do casamento | Edição de imagem, plano de mesas visual, WhatsApp e restantes módulos |
+| **3 — Ecossistema** *(iniciada)* | Completar a experiência do casamento | Plano de mesas visual (arrastar-para-sentar, por evento) ✅ · falta: WhatsApp, álbum partilhado, edição de imagem |
 
 As duas decisões que condicionam tudo o resto são a **Fase 0** (infraestrutura e
 multi-inquilinência) e a **escolha do editor** (avaliar Polotno / Fabric.js).

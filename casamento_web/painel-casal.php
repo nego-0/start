@@ -74,6 +74,7 @@ $H = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
       <a class="acao" href="editor-modelos.php"><div class="t">Modelo &amp; cores</div><div class="s">Galeria, paleta, tipografia, secções e textos</div></a>
       <a class="acao" href="editor-tela.php"><div class="t">Editor de tela</div><div class="s">Desenho livre do convite impresso</div></a>
       <a class="acao" href="convite-impresso.php"><div class="t">Convite impresso</div><div class="s">Cartão pronto a imprimir (PDF)</div></a>
+      <a class="acao" href="mesas-plano.php"><div class="t">Plano de mesas</div><div class="s">Sentar os convidados, arrastando</div></a>
       <a class="acao" href="convite-digital.php?evento=<?= $H($ativo['slug']) ?>" target="_blank"><div class="t">Ver convite digital ↗</div><div class="s">Pré-visualização pública do desenho</div></a>
     </div>
   </div>
