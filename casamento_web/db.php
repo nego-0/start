@@ -40,6 +40,10 @@ try {
 
 $P = PREFIXO; // atalho para o prefixo
 
+// Evento ativo (multi-inquilino). Por defeito o evento 1 (o casamento
+// atual). A camada de contas (conta.php) e as páginas públicas ajustam-no.
+$GLOBALS['EVENTO_ID'] = 1;
+
 // ---- Esquema (tabelas novas, prefixadas) -------------------
 $conn->query("
     CREATE TABLE IF NOT EXISTS {$P}mesas (
@@ -95,8 +99,67 @@ if ($col && $col->num_rows === 0) {
 }
 
 // ============================================================
+// Multi-inquilino (Fase 0): contas, eventos e isolamento por evento.
+// Aditivo e retrocompatível — os dados atuais passam a pertencer ao
+// evento 1 (semeado a partir de config.php). Nada é apagado.
+// ============================================================
+$conn->query("
+    CREATE TABLE IF NOT EXISTS {$P}contas (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        nome VARCHAR(160) NOT NULL,
+        email VARCHAR(190) NOT NULL UNIQUE,
+        senha_hash VARCHAR(255) NOT NULL,
+        criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+
+$conn->query("
+    CREATE TABLE IF NOT EXISTS {$P}eventos (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        conta_id INT NOT NULL,
+        slug VARCHAR(80) NOT NULL UNIQUE,
+        noiva VARCHAR(120) NOT NULL,
+        noivo VARCHAR(120) NOT NULL,
+        data_iso DATE DEFAULT NULL,
+        criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (conta_id) REFERENCES {$P}contas(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+
+// Coluna evento_id nas tabelas existentes (migração suave, default 1).
+foreach (['convites', 'mesas'] as $tab) {
+    $c = $conn->query("SHOW COLUMNS FROM {$P}{$tab} LIKE 'evento_id'");
+    if ($c && $c->num_rows === 0) {
+        $conn->query("ALTER TABLE {$P}{$tab} ADD COLUMN evento_id INT NOT NULL DEFAULT 1");
+        $conn->query("ALTER TABLE {$P}{$tab} ADD INDEX (evento_id)");
+    }
+}
+// A unicidade das mesas passa a ser por evento (nomes iguais em eventos diferentes).
+$idx = $conn->query("SHOW INDEX FROM {$P}mesas WHERE Key_name='nome'");
+if ($idx && $idx->num_rows > 0) {
+    @$conn->query("ALTER TABLE {$P}mesas DROP INDEX nome");
+    @$conn->query("ALTER TABLE {$P}mesas ADD UNIQUE KEY uniq_mesa_evento (evento_id, nome)");
+}
+
+// Semear a conta e o evento 1 com os dados atuais, se ainda não existir.
+$temConta = (int)($conn->query("SELECT COUNT(*) FROM {$P}contas")->fetch_row()[0] ?? 0);
+if ($temConta === 0) {
+    $nome  = (EVENTO['noiva'] ?? 'Isabel') . ' & ' . (EVENTO['noivo'] ?? 'Abednego');
+    $hash  = password_hash(SENHA_ADMIN, PASSWORD_DEFAULT);
+    $st = $conn->prepare("INSERT INTO {$P}contas (id, nome, email, senha_hash) VALUES (1, ?, 'principal@local', ?)");
+    $st->bind_param('ss', $nome, $hash); $st->execute();
+    $noiva = EVENTO['noiva'] ?? 'Isabel'; $noivo = EVENTO['noivo'] ?? 'Abednego'; $di = EVENTO['data_iso'] ?? '2026-12-19';
+    $st = $conn->prepare("INSERT INTO {$P}eventos (id, conta_id, slug, noiva, noivo, data_iso) VALUES (1, 1, 'principal', ?, ?, ?)");
+    $st->bind_param('sss', $noiva, $noivo, $di); $st->execute();
+    // Garantir que os dados existentes ficam no evento 1.
+    $conn->query("UPDATE {$P}convites SET evento_id=1 WHERE evento_id IS NULL OR evento_id=0");
+    $conn->query("UPDATE {$P}mesas SET evento_id=1 WHERE evento_id IS NULL OR evento_id=0");
+}
+
+// ============================================================
 // Funções partilhadas
 // ============================================================
+
+/** Id do evento ativo (multi-inquilino). Por defeito, o evento 1. */
+function eventoId(): int { return (int)($GLOBALS['EVENTO_ID'] ?? 1); }
 
 /** URL base do site (funciona em local e online, para links e QR). */
 function base_url(): string {
@@ -158,16 +221,17 @@ function mostraNumeroConvite(array $c): bool {
     return $mostrar && $suf === '' && $lug > 1;
 }
 
-/** Resolve/insere uma mesa pelo nome e devolve o id. */
+/** Resolve/insere uma mesa (no evento ativo) pelo nome e devolve o id. */
 function resolverMesa(mysqli $conn, string $nome): ?int {
     global $P;
+    $eid = eventoId();
     $nome = trim($nome);
     if ($nome === '') return null;
-    $st = $conn->prepare("SELECT id FROM {$P}mesas WHERE nome=? LIMIT 1");
-    $st->bind_param('s', $nome); $st->execute();
+    $st = $conn->prepare("SELECT id FROM {$P}mesas WHERE nome=? AND evento_id=? LIMIT 1");
+    $st->bind_param('si', $nome, $eid); $st->execute();
     if ($r = $st->get_result()->fetch_assoc()) return (int)$r['id'];
-    $st = $conn->prepare("INSERT INTO {$P}mesas (nome) VALUES (?)");
-    $st->bind_param('s', $nome); $st->execute();
+    $st = $conn->prepare("INSERT INTO {$P}mesas (nome, evento_id) VALUES (?, ?)");
+    $st->bind_param('si', $nome, $eid); $st->execute();
     return $conn->insert_id;
 }
 
@@ -189,49 +253,55 @@ function recalcularCheckin(mysqli $conn, int $conviteId, string $tsSql = 'NOW()'
     $st->bind_param('sii', $estado, $pres, $conviteId); $st->execute();
 }
 
-/** Estatísticas globais para o painel. */
+/** Estatísticas do evento ativo (multi-inquilino). */
 function estatisticas(mysqli $conn): array {
     global $P;
-    $one = fn($sql) => (int)($conn->query($sql)->fetch_row()[0] ?? 0);
+    $eid = eventoId();
+    // Base de filtro do evento (sempre presente) + condição extra opcional.
+    $one = function ($col, $extra = '') use ($conn, $P, $eid) {
+        $w = "evento_id=$eid" . ($extra ? " AND $extra" : '');
+        return (int)($conn->query("SELECT $col FROM {$P}convites WHERE $w")->fetch_row()[0] ?? 0);
+    };
     $s = [];
-    $s['convites']     = $one("SELECT COUNT(*) FROM {$P}convites");
-    $s['lugares']      = $one("SELECT COALESCE(SUM(lugares),0) FROM {$P}convites");
-    $s['convidados']   = $one("SELECT COUNT(*) FROM {$P}convidados");
-    $s['digitais']     = $one("SELECT COUNT(*) FROM {$P}convites WHERE tipo IN ('digital','ambos')");
-    $s['fisicos']      = $one("SELECT COUNT(*) FROM {$P}convites WHERE tipo IN ('fisico','ambos')");
-    $s['noivos']       = $one("SELECT COUNT(*) FROM {$P}convites WHERE lado IN ('noivo','ambos')");
-    $s['noivas']       = $one("SELECT COUNT(*) FROM {$P}convites WHERE lado IN ('noiva','ambos')");
-    $s['impressos']    = $one("SELECT COUNT(*) FROM {$P}convites WHERE impresso=1");
-    $s['enviados']     = $one("SELECT COUNT(*) FROM {$P}convites WHERE enviado=1");
-    $s['confirmados']  = $one("SELECT COUNT(*) FROM {$P}convites WHERE rsvp_estado='confirmado'");
-    $s['parciais']     = $one("SELECT COUNT(*) FROM {$P}convites WHERE rsvp_estado='parcial'");
-    $s['recusados']    = $one("SELECT COUNT(*) FROM {$P}convites WHERE rsvp_estado='recusado'");
-    $s['pendentes']    = $one("SELECT COUNT(*) FROM {$P}convites WHERE rsvp_estado='pendente'");
-    $s['lug_confirm']  = $one("SELECT COALESCE(SUM(rsvp_confirmados),0) FROM {$P}convites");
-    // Convidados reais (pessoas = lugares) por situação, tipo e lado
+    $s['convites']     = $one('COUNT(*)');
+    $s['lugares']      = $one('COALESCE(SUM(lugares),0)');
+    $s['convidados']   = (int)($conn->query("SELECT COUNT(*) FROM {$P}convidados cv JOIN {$P}convites c ON cv.convite_id=c.id WHERE c.evento_id=$eid")->fetch_row()[0] ?? 0);
+    $s['digitais']     = $one('COUNT(*)', "tipo IN ('digital','ambos')");
+    $s['fisicos']      = $one('COUNT(*)', "tipo IN ('fisico','ambos')");
+    $s['noivos']       = $one('COUNT(*)', "lado IN ('noivo','ambos')");
+    $s['noivas']       = $one('COUNT(*)', "lado IN ('noiva','ambos')");
+    $s['impressos']    = $one('COUNT(*)', 'impresso=1');
+    $s['enviados']     = $one('COUNT(*)', 'enviado=1');
+    $s['confirmados']  = $one('COUNT(*)', "rsvp_estado='confirmado'");
+    $s['parciais']     = $one('COUNT(*)', "rsvp_estado='parcial'");
+    $s['recusados']    = $one('COUNT(*)', "rsvp_estado='recusado'");
+    $s['pendentes']    = $one('COUNT(*)', "rsvp_estado='pendente'");
+    $s['lug_confirm']  = $one('COALESCE(SUM(rsvp_confirmados),0)');
     $s['pes_confirmados'] = $s['lug_confirm'];
-    $s['pes_pendentes']   = $one("SELECT COALESCE(SUM(lugares),0) FROM {$P}convites WHERE rsvp_estado='pendente'");
-    $s['pes_recusados']   = $one("SELECT COALESCE(SUM(lugares),0) FROM {$P}convites WHERE rsvp_estado='recusado'");
-    $s['pes_digitais']    = $one("SELECT COALESCE(SUM(lugares),0) FROM {$P}convites WHERE tipo IN ('digital','ambos')");
-    $s['pes_fisicos']     = $one("SELECT COALESCE(SUM(lugares),0) FROM {$P}convites WHERE tipo IN ('fisico','ambos')");
-    $s['pes_impressos']   = $one("SELECT COALESCE(SUM(lugares),0) FROM {$P}convites WHERE impresso=1");
-    $s['pes_noivos']      = $one("SELECT COALESCE(SUM(lugares),0) FROM {$P}convites WHERE lado IN ('noivo','ambos')");
-    $s['pes_noivas']      = $one("SELECT COALESCE(SUM(lugares),0) FROM {$P}convites WHERE lado IN ('noiva','ambos')");
+    $s['pes_pendentes']   = $one('COALESCE(SUM(lugares),0)', "rsvp_estado='pendente'");
+    $s['pes_recusados']   = $one('COALESCE(SUM(lugares),0)', "rsvp_estado='recusado'");
+    $s['pes_digitais']    = $one('COALESCE(SUM(lugares),0)', "tipo IN ('digital','ambos')");
+    $s['pes_fisicos']     = $one('COALESCE(SUM(lugares),0)', "tipo IN ('fisico','ambos')");
+    $s['pes_impressos']   = $one('COALESCE(SUM(lugares),0)', 'impresso=1');
+    $s['pes_noivos']      = $one('COALESCE(SUM(lugares),0)', "lado IN ('noivo','ambos')");
+    $s['pes_noivas']      = $one('COALESCE(SUM(lugares),0)', "lado IN ('noiva','ambos')");
     $s['capacidade']      = MAX_LUGARES_TOTAL;
-    $s['presentes']    = $one("SELECT COALESCE(SUM(checkin_presentes),0) FROM {$P}convites");
-    $s['no_local']     = $one("SELECT COUNT(*) FROM {$P}convites WHERE checkin_estado IN ('presente','parcial')");
-    $s['mesas']        = $one("SELECT COUNT(*) FROM {$P}mesas");
+    $s['presentes']    = $one('COALESCE(SUM(checkin_presentes),0)');
+    $s['no_local']     = $one('COUNT(*)', "checkin_estado IN ('presente','parcial')");
+    $s['mesas']        = (int)($conn->query("SELECT COUNT(*) FROM {$P}mesas WHERE evento_id=$eid")->fetch_row()[0] ?? 0);
     return $s;
 }
 
 /** Lista simples de mesas com ocupação. */
 function listarMesas(mysqli $conn): array {
     global $P;
+    $eid = eventoId();
     $sql = "SELECT m.id, m.nome, m.capacidade,
                    COALESCE(SUM(c.lugares),0) AS ocupacao,
                    COUNT(c.id) AS convites
             FROM {$P}mesas m
             LEFT JOIN {$P}convites c ON c.mesa_id = m.id
+            WHERE m.evento_id = $eid
             GROUP BY m.id, m.nome, m.capacidade
             ORDER BY m.nome";
     return $conn->query($sql)->fetch_all(MYSQLI_ASSOC);

@@ -34,7 +34,7 @@ function textosPadrao(): array {
         'hero_kicker'   => 'Vamos nos casar',
         'hero_sub'      => 'O nosso casamento',
         'conv_eyebrow'  => 'Venha partilhar a nossa alegria',
-        'conv_lead'     => 'Há amores que, como o amanhecer, chegam devagar — e o nosso chegou para iluminar toda uma vida. É com o coração cheio de júbilo que Isabel e Abednego têm a honra de convidar V.&nbsp;Exa. a partilhar a celebração do seu enlace matrimonial, e a alegria de um dia que ficará para sempre guardado na memória.',
+        'conv_lead'     => 'Há amores que, como o amanhecer, chegam devagar — e o nosso chegou para iluminar toda uma vida. É com o coração cheio de júbilo que %NOIVOS% têm a honra de convidar V.&nbsp;Exa. a partilhar a celebração do seu enlace matrimonial, e a alegria de um dia que ficará para sempre guardado na memória.',
         'conv_closing'  => 'A vossa presença será o mais belo dos presentes — a luz e a música que tornarão eterno o mais feliz dos nossos dias.',
         'hist_eyebrow'  => 'A nossa história',
         'hist_titulo'   => 'Dois olhares, um caminho',
@@ -81,6 +81,11 @@ function rotulosSeccoes(): array {
 
 /** Design padrão completo (evento + modelo esmeralda + textos atuais). */
 function designPadrao(): array {
+    return substituirNomesNosTextos(designPadraoBruto());
+}
+
+/** Design padrão "em bruto" — os textos ainda com o marcador %NOIVOS%. */
+function designPadraoBruto(): array {
     $noiva = EVENTO['noiva'] ?? 'Isabel';
     $noivo = EVENTO['noivo'] ?? 'Abednego';
     $m = modelo('esmeralda');
@@ -100,6 +105,15 @@ function designPadrao(): array {
         'seccoes'    => seccoesPadrao(),
         'textos'     => textosPadrao(),
     ];
+}
+
+/** Substitui o marcador %NOIVOS% (nos textos) pelos nomes do casal. */
+function substituirNomesNosTextos(array $d): array {
+    $par = trim(($d['evento']['noiva'] ?? '') . ' e ' . ($d['evento']['noivo'] ?? ''), ' e');
+    foreach ($d['textos'] as $k => $v) {
+        if (is_string($v)) $d['textos'][$k] = str_replace('%NOIVOS%', $par, $v);
+    }
+    return $d;
 }
 
 /** Iniciais no formato "I&A" a partir dos nomes. */
@@ -177,7 +191,8 @@ function normalizarDesign($data): array {
         if (isset($tx[$k]) && is_string($tx[$k])) $out['textos'][$k] = $tx[$k];
     }
 
-    return $out;
+    // Segurança: substitui qualquer %NOIVOS% remanescente pelos nomes do evento.
+    return substituirNomesNosTextos($out);
 }
 
 // ============================================================
@@ -189,40 +204,65 @@ function garantirEsquemaDesign(mysqli $conn): void {
     $conn->query("
         CREATE TABLE IF NOT EXISTS {$P}designs (
             id INT AUTO_INCREMENT PRIMARY KEY,
+            evento_id INT NOT NULL DEFAULT 1,
             nome VARCHAR(120) NOT NULL DEFAULT 'Convite',
             ativo TINYINT(1) DEFAULT 0,
             config LONGTEXT NOT NULL,
             criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             atualizado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    // Migração suave para instalações anteriores (sem evento_id).
+    $c = $conn->query("SHOW COLUMNS FROM {$P}designs LIKE 'evento_id'");
+    if ($c && $c->num_rows === 0) {
+        $conn->query("ALTER TABLE {$P}designs ADD COLUMN evento_id INT NOT NULL DEFAULT 1 AFTER id");
+        $conn->query("ALTER TABLE {$P}designs ADD INDEX (evento_id)");
+    }
 }
 
-/** Carrega o design ativo (ou o padrão, se ainda não houver). */
-function carregarDesignAtivo(mysqli $conn): array {
+/** Carrega o design do evento (ou o padrão, semeado com os dados do evento). */
+function carregarDesignAtivo(mysqli $conn, ?int $eventoId = null): array {
     global $P;
     garantirEsquemaDesign($conn);
-    $r = $conn->query("SELECT config FROM {$P}designs WHERE ativo=1 ORDER BY id LIMIT 1");
-    if ($r && ($row = $r->fetch_assoc())) {
+    $eid = $eventoId ?? eventoId();
+    $st = $conn->prepare("SELECT config FROM {$P}designs WHERE evento_id=? ORDER BY id LIMIT 1");
+    $st->bind_param('i', $eid); $st->execute();
+    if ($row = $st->get_result()->fetch_assoc()) {
         $cfg = json_decode($row['config'], true);
         if (is_array($cfg)) return normalizarDesign($cfg);
     }
-    return designPadrao();
+    return designPadraoDoEvento($conn, $eid);
 }
 
-/** Guarda o design (mantém uma única linha ativa nesta fase). */
-function guardarDesign(mysqli $conn, array $config, string $nome = 'Convite'): array {
+/** Design padrão com os nomes/data do evento (quando ainda não há design guardado). */
+function designPadraoDoEvento(mysqli $conn, int $eid): array {
+    global $P;
+    $d = designPadraoBruto();
+    $r = $conn->query("SELECT noiva, noivo, data_iso FROM {$P}eventos WHERE id=" . (int)$eid . " LIMIT 1");
+    if ($r && ($e = $r->fetch_assoc())) {
+        $d['evento']['noiva']    = $e['noiva'];
+        $d['evento']['noivo']    = $e['noivo'];
+        $d['evento']['iniciais'] = iniciaisDe($e['noiva'], $e['noivo']);
+        if (!empty($e['data_iso'])) $d['evento']['data_iso'] = $e['data_iso'];
+    }
+    return substituirNomesNosTextos($d);
+}
+
+/** Guarda o design do evento (uma linha por evento). */
+function guardarDesign(mysqli $conn, array $config, string $nome = 'Convite', ?int $eventoId = null): array {
     global $P;
     garantirEsquemaDesign($conn);
+    $eid = $eventoId ?? eventoId();
     $norm = normalizarDesign($config);
     $json = json_encode($norm, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
-    $r = $conn->query("SELECT id FROM {$P}designs ORDER BY id LIMIT 1");
-    if ($r && ($row = $r->fetch_assoc())) {
+    $st = $conn->prepare("SELECT id FROM {$P}designs WHERE evento_id=? ORDER BY id LIMIT 1");
+    $st->bind_param('i', $eid); $st->execute();
+    if ($row = $st->get_result()->fetch_assoc()) {
         $st = $conn->prepare("UPDATE {$P}designs SET nome=?, config=?, ativo=1 WHERE id=?");
         $st->bind_param('ssi', $nome, $json, $row['id']); $st->execute();
     } else {
-        $st = $conn->prepare("INSERT INTO {$P}designs (nome, ativo, config) VALUES (?,1,?)");
-        $st->bind_param('ss', $nome, $json); $st->execute();
+        $st = $conn->prepare("INSERT INTO {$P}designs (evento_id, nome, ativo, config) VALUES (?,?,1,?)");
+        $st->bind_param('iss', $eid, $nome, $json); $st->execute();
     }
     return $norm;
 }

@@ -7,9 +7,9 @@
 //   Bibliotecas servidas localmente (assets/vendor). Só administrador.
 // ============================================================
 require_once __DIR__ . '/db.php';
-require_once __DIR__ . '/auth.php';
+require_once __DIR__ . '/conta.php';
 require_once __DIR__ . '/impresso.php';
-exigirAdmin();
+exigirEdicao($conn);   // admin legado (evento 1) ou casal (o seu evento)
 
 $flash = '';
 if (($_POST['acao'] ?? '') === 'guardar') {
@@ -81,7 +81,7 @@ $H = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
   <b class="badge">convite impresso · A5</b>
   <span class="sp"></span>
   <a href="convite-impresso.php" target="_blank">Ver versão “config”</a>
-  <a href="index.php">← Painel</a>
+  <a href="<?= $H(urlPainel()) ?>">← Painel</a>
   <button type="button" onclick="exportarPNG()">PNG</button>
   <button type="button" onclick="exportarPDF()">PDF</button>
   <button type="button" class="b-guardar" onclick="guardar()">Guardar</button>

@@ -12,34 +12,44 @@ function garantirEsquemaImpresso(mysqli $conn): void {
     $conn->query("
         CREATE TABLE IF NOT EXISTS {$P}impressos (
             id INT AUTO_INCREMENT PRIMARY KEY,
+            evento_id INT NOT NULL DEFAULT 1,
             nome VARCHAR(120) NOT NULL DEFAULT 'Convite impresso',
             config LONGTEXT NOT NULL,
             criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             atualizado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    $c = $conn->query("SHOW COLUMNS FROM {$P}impressos LIKE 'evento_id'");
+    if ($c && $c->num_rows === 0) {
+        $conn->query("ALTER TABLE {$P}impressos ADD COLUMN evento_id INT NOT NULL DEFAULT 1 AFTER id");
+        $conn->query("ALTER TABLE {$P}impressos ADD INDEX (evento_id)");
+    }
 }
 
-/** Devolve o JSON da tela guardada, ou null se ainda não houver. */
-function carregarImpressoTela(mysqli $conn): ?string {
+/** Devolve o JSON da tela guardada do evento, ou null se ainda não houver. */
+function carregarImpressoTela(mysqli $conn, ?int $eventoId = null): ?string {
     global $P;
     garantirEsquemaImpresso($conn);
-    $r = $conn->query("SELECT config FROM {$P}impressos ORDER BY id LIMIT 1");
-    if ($r && ($row = $r->fetch_assoc())) return $row['config'];
+    $eid = $eventoId ?? eventoId();
+    $st = $conn->prepare("SELECT config FROM {$P}impressos WHERE evento_id=? ORDER BY id LIMIT 1");
+    $st->bind_param('i', $eid); $st->execute();
+    if ($row = $st->get_result()->fetch_assoc()) return $row['config'];
     return null;
 }
 
-/** Guarda o JSON da tela (valida que é JSON). Devolve true/false. */
-function guardarImpressoTela(mysqli $conn, string $json): bool {
+/** Guarda o JSON da tela do evento (valida que é JSON). Devolve true/false. */
+function guardarImpressoTela(mysqli $conn, string $json, ?int $eventoId = null): bool {
     global $P;
     garantirEsquemaImpresso($conn);
+    $eid = $eventoId ?? eventoId();
     if (json_decode($json) === null && strtolower(trim($json)) !== 'null') return false;
-    $r = $conn->query("SELECT id FROM {$P}impressos ORDER BY id LIMIT 1");
-    if ($r && ($row = $r->fetch_assoc())) {
+    $st = $conn->prepare("SELECT id FROM {$P}impressos WHERE evento_id=? ORDER BY id LIMIT 1");
+    $st->bind_param('i', $eid); $st->execute();
+    if ($row = $st->get_result()->fetch_assoc()) {
         $st = $conn->prepare("UPDATE {$P}impressos SET config=? WHERE id=?");
         $st->bind_param('si', $json, $row['id']); return $st->execute();
     }
-    $st = $conn->prepare("INSERT INTO {$P}impressos (config) VALUES (?)");
-    $st->bind_param('s', $json); return $st->execute();
+    $st = $conn->prepare("INSERT INTO {$P}impressos (evento_id, config) VALUES (?, ?)");
+    $st->bind_param('is', $eid, $json); return $st->execute();
 }
 
 /**

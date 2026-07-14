@@ -11,12 +11,18 @@
 //   passo de pré-impressão feito pela gráfica.
 // ============================================================
 require_once __DIR__ . '/db.php';
-require_once __DIR__ . '/auth.php';
+require_once __DIR__ . '/conta.php';
 require_once __DIR__ . '/design.php';
+
+// Evento a mostrar: ?evento=SLUG (partilha pública) ou o evento ativo da sessão.
+if (isset($_GET['evento'])) {
+    $ev = eventoPorSlug($conn, (string)$_GET['evento']);
+    if ($ev) $GLOBALS['EVENTO_ID'] = (int)$ev['id'];
+}
 
 $preview = isset($_GET['preview']) && $_GET['preview'] === '1';
 if ($preview) {
-    if (!ehAdmin()) { http_response_code(403); exit('Pré-visualização reservada ao administrador.'); }
+    if (!ehAdmin() && contaLogada() === null) { http_response_code(403); exit('Pré-visualização reservada.'); }
     $design = null;
     if (isset($_POST['design'])) {
         $d = json_decode($_POST['design'], true);
@@ -139,7 +145,7 @@ body{ font-family:var(--ff-sans); background:#3b3b3b; color:var(--text); }
 </head>
 <body>
 <div class="barra no-print">
-  <a href="index.php">← Painel</a>
+  <a href="<?= $H(urlPainel()) ?>">← Painel</a>
   <a href="editor-modelos.php">Editar modelo</a>
   <a href="editor-tela.php">Editor de tela ↗</a>
   <span class="sp"></span>

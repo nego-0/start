@@ -11,34 +11,43 @@
 //   ativo — ver design.php e editor-modelos.php (Fase 1).
 // ============================================================
 require_once __DIR__ . '/db.php';
+require_once __DIR__ . '/conta.php';
 require_once __DIR__ . '/design.php';
-require_once __DIR__ . '/auth.php';
 
 $preview  = isset($_GET['preview']) && $_GET['preview'] === '1';
 $download = isset($_GET['download']) && $_GET['download'] === '1';
+$amostra  = false;   // convite de exemplo (pré-visualização ou partilha por evento)
 
-// ---- Design a aplicar ----------------------------------------
+// ---- Resolver o evento e o convite ---------------------------
 if ($preview) {
-    if (!ehAdmin()) { http_response_code(403); exit('Pré-visualização reservada ao administrador.'); }
+    if (!ehAdmin() && contaLogada() === null) { http_response_code(403); exit('Pré-visualização reservada.'); }
+    $amostra = true;
     $design = null;
     if (isset($_POST['design'])) {
         $d = json_decode($_POST['design'], true);
         if (is_array($d)) $design = normalizarDesign($d);
     }
     if (!$design) $design = carregarDesignAtivo($conn);
+} elseif (isset($_GET['evento'])) {
+    // Partilha pública do desenho de um evento (sem convite específico).
+    $ev = eventoPorSlug($conn, (string)$_GET['evento']);
+    if ($ev) $GLOBALS['EVENTO_ID'] = (int)$ev['id'];
+    $amostra = true;
+    $design = carregarDesignAtivo($conn);
 } else {
+    // Convite real: o evento vem do próprio convite.
+    $codigo = strtoupper(trim($_GET['c'] ?? ''));
+    $c = $codigo !== '' ? carregarConvite($conn, $codigo, 'codigo') : null;
+    if ($c && isset($c['evento_id'])) $GLOBALS['EVENTO_ID'] = (int)$c['evento_id'];
     $design = carregarDesignAtivo($conn);
 }
 
-// ---- Convite (real, ou de exemplo em pré-visualização) -------
-if ($preview) {
+// Convite de exemplo (pré-visualização ou partilha por evento)
+if ($amostra) {
     $c = [
         'codigo' => 'EXEMPLO', 'nome_exibicao' => 'Família Exemplo',
         'sufixo' => null, 'mostrar_numero' => 1, 'lugares' => 2, 'mesa_nome' => 'Mesa 1',
     ];
-} else {
-    $codigo = strtoupper(trim($_GET['c'] ?? ''));
-    $c = $codigo !== '' ? carregarConvite($conn, $codigo, 'codigo') : null;
 }
 
 // ---- Convite inválido: página breve e autossuficiente --------
@@ -95,7 +104,7 @@ if (!empty($c['mesa_nome'])) {
         . "<b style=\"font-weight:600;color:var(--forest)\">{$mesa}</b></p>";
 }
 
-if ($preview) {
+if ($amostra) {
     $confirmUrl  = '#';
     $downloadUrl = '#';
     $qrValue     = 'PRE-VISUALIZACAO';

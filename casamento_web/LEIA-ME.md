@@ -11,6 +11,8 @@ O sistema foi desenhado para **coexistir** com a sua lista atual: cria tabelas n
 | Ficheiro | Função |
 |---|---|
 | `config.php` | Configuração central: dados do evento, palavras-passe e ligação à base de dados. **É o único ficheiro que precisa de editar.** |
+| `conta.php` | **Contas de casais e eventos** (Fase 0, multi-inquilino): registo/login por email, evento ativo e isolamento de dados. |
+| `entrar.php` / `registar.php` / `painel-casal.php` / `sair-conta.php` | Entrada, criação de conta, painel do casal e saída. |
 | `db.php` | Ligação, criação automática das tabelas e funções partilhadas. |
 | `auth.php` | Autenticação por sessão (administrador e porteiro). |
 | `api.php` | Todos os pedidos JSON (gestão, RSVP público e porteiro) e exportação CSV. |
@@ -36,7 +38,13 @@ O sistema foi desenhado para **coexistir** com a sua lista atual: cria tabelas n
 - **`cw_convites`** — o convite é a unidade central: código único, nome a exibir, sufixo opcional, tipo (`digital`/`fisico`/`ambos`), lado, número de lugares, mesa, telefone, estados de RSVP e de entrada, mensagens e observações.
 - **`cw_convidados`** — as pessoas nominais de cada convite (com RSVP e presença individuais).
 - **`cw_mesas`** — mesas com capacidade e ocupação.
-- **`cw_designs`** — o design ativo do convite, guardado em JSON (paleta, tipografia, secções e textos). Criada automaticamente.
+- **`cw_designs`** — o design do convite (por evento), em JSON (paleta, tipografia, secções e textos). Criada automaticamente.
+- **`cw_contas`** / **`cw_eventos`** — contas de casais e os seus eventos (Fase 0). As tabelas existentes ganham `evento_id`; os dados atuais ficam no **evento 1**.
+
+### Dois modos de acesso (Fase 0)
+
+- **Admin legado** (palavra-passe em `config.php`) — gere o **evento 1** (o casamento atual) com todas as funcionalidades de convidados/RSVP/porteiro. Inalterado.
+- **Contas de casais** (`registar.php` / `entrar.php`) — cada casal cria a sua conta e um ou mais eventos, com **design isolado** (modelo, cores, textos, convite impresso e editor de tela) por evento. Partilha pública do desenho em `convite-digital.php?evento=SLUG` e `convite-impresso.php?evento=SLUG`.
 
 ---
 

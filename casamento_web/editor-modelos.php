@@ -6,9 +6,9 @@
 //   ao vivo. Só o administrador acede.
 // ============================================================
 require_once __DIR__ . '/db.php';
-require_once __DIR__ . '/auth.php';
+require_once __DIR__ . '/conta.php';
 require_once __DIR__ . '/design.php';
-exigirAdmin();
+exigirEdicao($conn);   // admin legado (evento 1) ou casal (o seu evento)
 
 $flash = '';
 
@@ -120,7 +120,7 @@ $H = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
 <div class="em-top">
   <h1>Editor de modelos</h1>
   <span class="sp"></span>
-  <a href="index.php">← Voltar ao painel</a>
+  <a href="<?= $H(urlPainel()) ?>">← Voltar ao painel</a>
   <a href="convite-impresso.php" target="_blank" title="Abre a versão impressa do modelo guardado">Ver versão impressa ↗</a>
   <button class="btn-guardar" type="button" onclick="guardar()">Guardar modelo</button>
 </div>

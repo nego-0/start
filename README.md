@@ -9,7 +9,29 @@ personaliza e gere os seus convites e todo o seu evento.
 
 ---
 
-## O que já existe (fundação — Fase 0)
+## O que já existe
+
+### Fase 0 — Multi-inquilino (fundação) ✅
+
+A aplicação deixou de servir um só casamento: agora tem **contas de casais** e
+**eventos**, com **isolamento de dados por evento** (aditivo e retrocompatível —
+o casamento atual passou a ser o *evento 1* e continua a funcionar tal como
+estava).
+
+- `conta.php` + `registar.php` / `entrar.php` / `painel-casal.php`: registo e
+  login por email, criação/seleção de eventos, e um painel onde cada casal
+  desenha o seu convite.
+- Isolamento: `cw_contas`, `cw_eventos` e coluna `evento_id` em convites, mesas,
+  designs e telas; cada evento tem o seu design independente.
+- **Dois acessos**: admin legado (palavra-passe) gere o evento 1 com convidados/
+  RSVP/porteiro; contas de casais gerem os seus próprios eventos e designs.
+- Partilha pública do desenho: `convite-digital.php?evento=SLUG` e
+  `convite-impresso.php?evento=SLUG`.
+- Falta (continuação da Fase 0): gestão de convidados/RSVP por evento para as
+  contas de casais (hoje o CRUD de convidados serve só o evento 1) e infra de
+  produção (alojamento, base de dados gerida, armazenamento de imagens).
+
+## Detalhe da aplicação
 
 ### `casamento_web/` — aplicação PHP + MySQL (a funcionar)
 Sistema de inquilino único que faz a gestão completa de um casamento:
@@ -78,7 +100,7 @@ seguinte.
 
 | Fase | Objetivo | Entregáveis principais |
 |---|---|---|
-| **0 — Fundação** | Infraestrutura própria e multi-inquilinência | Alojamento, base de dados gerida, armazenamento de imagens, contas e eventos |
+| **0 — Fundação** *(em curso)* | Infraestrutura própria e multi-inquilinência | Contas, eventos e isolamento por evento ✅ · falta: convidados/RSVP por conta, alojamento e BD geridos, armazenamento de imagens |
 | **1 — Modelos** *(em curso)* | Personalizar o convite por configuração | Galeria de modelos, edição de cores, textos e secções ✅ · falta: gestão de fotos e música por evento |
 | **2 — Editor** *(em curso)* | Liberdade total de desenho e impressão | Convite impresso (A5/A6/quadrado, molduras, verso) ✅ · editor visual de tela Fabric.js (PNG/PDF) ✅ · falta: CMYK e edição de imagem |
 | **3 — Ecossistema** | Completar a experiência do casamento | Edição de imagem, plano de mesas visual, WhatsApp e restantes módulos |
