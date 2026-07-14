@@ -45,6 +45,14 @@ reescrever o convite:
 - Camada de tema em funções puras (`design.php`, `modelos.php`), com testes de
   renderização independentes da base de dados.
 
+### Fase 2 — Convite impresso (início) ✅
+
+O **mesmo desenho gera o convite físico**: `casamento_web/convite-impresso.php`
+produz um cartão **A5 (corte 148×210 mm)** com **sangria de 3 mm**, **marcas de
+corte** e alta resolução, pronto a imprimir ou guardar em PDF (com molduras à
+escolha). É o primeiro dos requisitos de impressão do plano; a conversão CMYK
+fica para o passo de pré-impressão da gráfica.
+
 ### `prototipos/` — protótipos de interface
 - `editor-convites.html` — **protótipo do Atelier de Convites** (editor visual),
   para explorar a experiência da Fase 2.
@@ -65,7 +73,7 @@ seguinte.
 |---|---|---|
 | **0 — Fundação** | Infraestrutura própria e multi-inquilinência | Alojamento, base de dados gerida, armazenamento de imagens, contas e eventos |
 | **1 — Modelos** *(em curso)* | Personalizar o convite por configuração | Galeria de modelos, edição de cores, textos e secções ✅ · falta: gestão de fotos e música por evento |
-| **2 — Editor** | Liberdade total de desenho e impressão | Editor visual de tela, exportação para impressão pronta a usar |
+| **2 — Editor** *(iniciada)* | Liberdade total de desenho e impressão | Convite impresso A5 com sangria e marcas de corte ✅ · falta: editor visual de tela (Fabric.js) e CMYK |
 | **3 — Ecossistema** | Completar a experiência do casamento | Edição de imagem, plano de mesas visual, WhatsApp e restantes módulos |
 
 As duas decisões que condicionam tudo o resto são a **Fase 0** (infraestrutura e

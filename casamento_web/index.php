@@ -128,7 +128,8 @@ $totalConvites  = (int)$conn->query("SELECT COUNT(*) FROM {$P}convites")->fetch_
     <nav class="nav">
       <a href="index.php" class="ativo">Painel</a>
       <a href="editor-modelos.php">Modelo do convite</a>
-      <a href="impressos.php">Convites físicos</a>
+      <a href="convite-impresso.php">Convite impresso</a>
+      <a href="impressos.php">Etiquetas físicas</a>
       <a href="porteiro.php">Porta</a>
       <a href="logout.php">Sair</a>
     </nav>

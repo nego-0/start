@@ -53,6 +53,7 @@ $labelsTex = [
     'rsvp_sub'      => ['RSVP · subtítulo', 1],
     'rsvp_deadline' => ['RSVP · prazo', 0],
     'footer_nota'   => ['Rodapé · citação', 1],
+    'impresso_abertura' => ['Impresso · frase de abertura', 0],
 ];
 
 $H = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
@@ -120,7 +121,7 @@ $H = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
   <h1>Editor de modelos</h1>
   <span class="sp"></span>
   <a href="index.php">← Voltar ao painel</a>
-  <a href="convite-digital.php?preview=1" target="previewFrame" onclick="return false;" style="display:none">pv</a>
+  <a href="convite-impresso.php" target="_blank" title="Abre a versão impressa do modelo guardado">Ver versão impressa ↗</a>
   <button class="btn-guardar" type="button" onclick="guardar()">Guardar modelo</button>
 </div>
 <?php if ($flash): ?><div class="flash"><?= $H($flash) ?></div><?php endif; ?>

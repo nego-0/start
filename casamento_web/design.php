@@ -51,6 +51,7 @@ function textosPadrao(): array {
         'rsvp_sub'      => 'Cada história de amor é bela — mas a nossa terá um capítulo escrito também por si.',
         'rsvp_deadline' => 'Confirme a sua presença até 5 de Dezembro',
         'footer_nota'   => '&ldquo;Amor é fogo que arde sem se ver.&rdquo; — Luís de Camões',
+        'impresso_abertura' => 'Com alegria, convidam',
     ];
 }
 
@@ -267,6 +268,10 @@ function tokensDerivados(array $design): array {
     $horaTxt = sprintf('Ás %dh%02d', $h, $mi);
     $isoLocal = sprintf('%04d-%02d-%02dT%02d:%02d:00%s', $ano, $mes, $dia, $h, $mi, $tz);
 
+    // Data/hora por extenso (convite impresso)
+    $dataExtensa = trim(sprintf('%s, %d de %s de %d', $diaSemana, $dia, mb_strtolower($mesExt, 'UTF-8'), $ano), ', ');
+    $horaExtensa = sprintf('às %dh%02d', $h, $mi);
+
     // Calendário (.ics) em UTC
     $dtStart = $dtEnd = '';
     if ($dt) {
@@ -298,6 +303,8 @@ function tokensDerivados(array $design): array {
         'ANO'        => (string)$ano,
         'DIA_SEMANA' => $esc($diaSemana),
         'HORA_TXT'   => $esc($horaTxt),
+        'DATA_EXTENSA' => $esc($dataExtensa),
+        'HORA_EXTENSA' => $esc($horaExtensa),
         // Derivados de texto
         'TITULO_PAGINA' => $esc($titulo),
         'CRONO_SUB'     => $esc($cronoSub),
@@ -325,31 +332,54 @@ function tokensDerivados(array $design): array {
  * CSS do tema: importação de fontes web (se necessário),
  * substituição da paleta e da tipografia, e visibilidade das secções.
  */
-function construirCssTema(array $design): string {
+/** Importação Google Fonts para as fontes web escolhidas (ou '' se todas locais). */
+function cssImportacaoFontes(array $design): string {
+    $fs = fontesDisponiveis();
+    $params = [];
+    foreach (['serif','sans','script'] as $papel) {
+        $k = $design['tipografia'][$papel] ?? null;
+        if ($k && isset($fs[$k]) && !empty($fs[$k]['google'])) $params[$fs[$k]['google']] = true;
+    }
+    if (!$params) return '';
+    $q = implode('', array_map(fn($p) => '&family=' . $p, array_keys($params)));
+    return "@import url('https://fonts.googleapis.com/css2?" . ltrim($q, '&') . "&display=swap');\n";
+}
+
+/** :root com a paleta e as três famílias tipográficas do design. */
+function cssVariaveis(array $design): string {
     $fs = fontesDisponiveis();
     $pal = $design['paleta'];
     $tp  = $design['tipografia'];
+    $css = ':root{';
+    foreach (chavesPaleta() as $k) $css .= "--$k:{$pal[$k]};";
+    $css .= '--ff-serif:'  . ($fs[$tp['serif']]['familia']  ?? "'Cormorant Garamond',serif") . ';';
+    $css .= '--ff-sans:'   . ($fs[$tp['sans']]['familia']   ?? "'Jost',sans-serif") . ';';
+    $css .= '--ff-script:' . ($fs[$tp['script']]['familia'] ?? "'Pinyon Script',cursive") . ';';
+    return $css . '}';
+}
 
-    // Importação Google Fonts para as fontes não-locais escolhidas
-    $params = [];
-    foreach (['serif','sans','script'] as $papel) {
-        $k = $tp[$papel] ?? null;
-        if ($k && isset($fs[$k]) && !empty($fs[$k]['google'])) $params[$fs[$k]['google']] = true;
-    }
-    $css = '';
-    if ($params) {
-        $q = implode('', array_map(fn($p) => '&family=' . $p, array_keys($params)));
-        $css .= "@import url('https://fonts.googleapis.com/css2?" . ltrim($q, '&') . "&display=swap');\n";
-    }
+/** Declarações @font-face das fontes locais (para páginas fora do convite-base). */
+function cssFontesLocais(): string {
+    $b = 'assets/convite/fonts';
+    $f = fn($fam, $st, $w, $file) => "@font-face{font-family:'$fam';font-style:$st;font-weight:$w;font-display:swap;src:url($b/$file) format('woff2')}";
+    return implode('', [
+        $f('Pinyon Script','normal',400,'pinyon-script-latin-400-normal.woff2'),
+        $f('Cormorant Garamond','normal',400,'cormorant-garamond-latin-400-normal.woff2'),
+        $f('Cormorant Garamond','normal',500,'cormorant-garamond-latin-500-normal.woff2'),
+        $f('Cormorant Garamond','normal',600,'cormorant-garamond-latin-600-normal.woff2'),
+        $f('Cormorant Garamond','italic',400,'cormorant-garamond-latin-400-italic.woff2'),
+        $f('Cormorant Garamond','italic',500,'cormorant-garamond-latin-500-italic.woff2'),
+        $f('Jost','normal',300,'jost-latin-300-normal.woff2'),
+        $f('Jost','normal',400,'jost-latin-400-normal.woff2'),
+        $f('Jost','normal',500,'jost-latin-500-normal.woff2'),
+    ]);
+}
+
+function construirCssTema(array $design): string {
+    $css = cssImportacaoFontes($design);
 
     // Paleta + tipografia (sobrepõem o :root base)
-    $css .= ':root{';
-    foreach (chavesPaleta() as $k) $css .= "--$k:{$pal[$k]};";
-    $famSerif  = $fs[$tp['serif']]['familia']  ?? "'Cormorant Garamond',serif";
-    $famSans   = $fs[$tp['sans']]['familia']   ?? "'Jost',sans-serif";
-    $famScript = $fs[$tp['script']]['familia'] ?? "'Pinyon Script',cursive";
-    $css .= "--ff-serif:$famSerif;--ff-sans:$famSans;--ff-script:$famScript;";
-    $css .= '}';
+    $css .= cssVariaveis($design);
 
     // Visibilidade das secções
     $seletor = [
@@ -395,6 +425,7 @@ function mapaTextos(array $design): array {
         'RSVP_SUB'      => $t['rsvp_sub'],
         'RSVP_DEADLINE' => $t['rsvp_deadline'],
         'FOOTER_NOTA'   => $t['footer_nota'],
+        'IMPRESSO_ABERTURA' => $t['impresso_abertura'] ?? 'Com alegria, convidam',
     ];
     return array_merge($tokens, tokensDerivados($design));
 }

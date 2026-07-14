@@ -20,6 +20,7 @@ O sistema foi desenhado para **coexistir** com a sua lista atual: cria tabelas n
 | `porteiro.php` | Página do porteiro: leitura de QR por câmara e busca manual. |
 | `impressos.php` | Etiquetas dos convites físicos com QR, prontas a imprimir. |
 | `editor-modelos.php` | **Editor de modelos** (Fase 1): galeria, cores, tipografia, secções e textos, com pré-visualização ao vivo. |
+| `convite-impresso.php` | **Convite impresso** (Fase 2): cartão A5 pronto a imprimir, com sangria de 3 mm e marcas de corte, a partir do mesmo design. |
 | `modelos.php` | Galeria de modelos (predefinições de paleta e tipografia) e registo de tipos de letra. |
 | `design.php` | Camada de personalização: esquema `cw_designs`, design padrão e o construtor de tema (funções puras). |
 | `assets/estilo.css` | Estilo visual, alinhado com o convite (verde-floresta, dourado e marfim). |
@@ -90,6 +91,8 @@ O sistema tenta primeiro a ligação `local` (útil para testes em XAMPP/Wamp) e
 - **Data e casal** — os nomes e a data alimentam automaticamente o título, a contagem decrescente, o dia da semana e o botão de calendário.
 
 Tudo é mostrado numa **pré-visualização ao vivo**; ao **Guardar**, o convite público passa a refletir o novo modelo. O design fica guardado em `cw_designs` — o convite `assets/convite-base.html` permanece intacto, apenas recebe as personalizações na altura de servir.
+
+**Convite impresso (Fase 2).** A partir do **mesmo design**, a página *Convite impresso* gera um cartão **A5 (corte 148×210 mm)** com **sangria de 3 mm** e **marcas de corte**, pronto a imprimir ou a guardar em PDF (botão *Imprimir / Guardar PDF*). Pode escolher a moldura (dupla, simples ou cantos). Assim, um único desenho serve o convite digital **e** o convite físico. A conversão para CMYK é o passo de pré-impressão feito pela gráfica.
 
 ---
 
