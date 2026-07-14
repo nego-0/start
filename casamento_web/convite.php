@@ -5,17 +5,36 @@
 // convite em PDF ou enviá-lo pelo WhatsApp.
 // ============================================================
 require_once __DIR__ . '/db.php';
+require_once __DIR__ . '/design.php';
 $codigo = strtoupper(trim($_GET['c'] ?? ''));
 $c = $codigo !== '' ? carregarConvite($conn, $codigo, 'codigo') : null;
 $valido = (bool)$c;
 $linkDigital = $valido ? base_url() . '/convite-digital.php?c=' . $c['codigo'] : '';
 $linkPdf     = $valido ? $linkDigital . '&download=1' : '';
+
+// Dados do casal/evento a partir do design do evento deste convite.
+$selo = 'I&amp;A'; $casalHtml = 'Convite'; $casalPlain = 'os noivos';
+$quando = ''; $venueTitulo = ''; $venueLocal = '';
+$dataIsoJs = EVENTO['data_iso'] . 'T' . EVENTO['hora'] . ':00';
+if ($valido) {
+    $GLOBALS['EVENTO_ID'] = (int)($c['evento_id'] ?? 1);
+    $design = carregarDesignAtivo($conn);
+    $tok = mapaTextos($design);
+    $selo        = $tok['INICIAIS'];
+    $casalHtml   = $tok['NOIVA'] . ' &amp; ' . $tok['NOIVO'];
+    $casalPlain  = $design['evento']['noiva'] . ' & ' . $design['evento']['noivo'];
+    $quando      = $tok['DATA_EXTENSA'] . ' · ' . $tok['HORA_EXTENSA'];
+    $venueTitulo = $design['textos']['venue_titulo'];
+    $venueLocal  = $design['textos']['venue_local'];
+    $dataIsoJs   = $design['evento']['data_iso'] . 'T' . $design['evento']['hora'] . ':00';
+}
+$whats = EVENTO['whatsapp'];
 ?>
 <!DOCTYPE html>
 <html lang="pt">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Confirmação · Isabel &amp; Abednego</title>
+<title>Confirmação · <?= $valido ? $casalHtml : 'Convite' ?></title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Jost:wght@300;400;500&family=Pinyon+Script&display=swap" rel="stylesheet">
 <style>
@@ -114,7 +133,7 @@ $linkPdf     = $valido ? $linkDigital . '&download=1' : '';
 <?php if (!$valido): ?>
   <div class="folha"><div class="erro-pag">
     <div class="rotulo" style="color:var(--gold)">Convite</div>
-    <div class="casal">Isabel &amp; Abednego</div>
+    <div class="casal">Convite</div>
     <p style="margin-top:1rem;">Este link de convite não é válido ou já não está disponível.<br>
     Por favor, confirme o endereço ou contacte os noivos.</p>
     <p><a class="link-wa" href="https://wa.me/<?= EVENTO['whatsapp'] ?>">Falar pelo WhatsApp</a></p>
@@ -125,10 +144,10 @@ $linkPdf     = $valido ? $linkDigital . '&download=1' : '';
 ?>
   <div class="folha">
     <div class="cabeca">
-      <div class="selo">I&amp;A</div>
+      <div class="selo"><?= $selo ?></div>
       <div class="rotulo">Têm o prazer de o(a) convidar</div>
-      <div class="casal">Isabel &amp; Abednego</div>
-      <div class="quando"><?= EVENTO['data_ext'] ?> · <?= EVENTO['hora'] ?></div>
+      <div class="casal"><?= $casalHtml ?></div>
+      <div class="quando"><?= $quando ?></div>
     </div>
 
     <div class="corpo">
@@ -147,8 +166,8 @@ $linkPdf     = $valido ? $linkDigital . '&download=1' : '';
       <div class="divisor">✦</div>
 
       <div class="info-ev">
-        <strong><?= htmlspecialchars(EVENTO['local']) ?></strong><br>
-        <?= htmlspecialchars(EVENTO['cidade']) ?>
+        <strong><?= $venueTitulo ?></strong><br>
+        <?= $venueLocal ?>
       </div>
 
       <div class="divisor">Confirmação de presença</div>
@@ -241,7 +260,7 @@ const CODIGO   = <?= json_encode($c['codigo']) ?>;
 const LINK_DIGITAL = <?= json_encode($linkDigital) ?>;
 const LUGARES  = <?= (int)$c['lugares'] ?>;
 const TEM_MEMB = <?= count($c['membros']) > 1 ? 'true':'false' ?>;
-const DATA_EV  = new Date(<?= json_encode(EVENTO['data_iso'].'T'.EVENTO['hora'].':00') ?>);
+const DATA_EV  = new Date(<?= json_encode($dataIsoJs) ?>);
 let escolha = <?= $jaRespondeu ? json_encode($c['rsvp_estado']==='recusado'?'nao':'sim') : 'null' ?>;
 
 const $=id=>document.getElementById(id);
@@ -269,7 +288,7 @@ function escolher(v){
 function enviarWhatsapp(){
   let n=($('wa-num').value||'').replace(/\D/g,'');
   if(n.length<9){ alert('Indique um número de telefone válido, com o indicativo do país.'); return; }
-  const msg='Aqui está o meu convite para o casamento de Isabel & Abednego: '+LINK_DIGITAL;
+  const msg='Aqui está o meu convite para o casamento de <?= jsEscape($casalPlain) ?>: '+LINK_DIGITAL;
   window.open('https://wa.me/'+n+'?text='+encodeURIComponent(msg),'_blank');
 }
 
