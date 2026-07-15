@@ -42,6 +42,12 @@ $labelsTex = [
     'hist_titulo'   => ['História · título', 0],
     'hist_citacao'  => ['História · citação', 0],
     'hist_autor'    => ['História · autor', 0],
+    'hist_cap1_titulo' => ['História · Cap. I — título', 0],
+    'hist_cap1_texto'  => ['História · Cap. I — texto', 1],
+    'hist_cap2_titulo' => ['História · Cap. II — título', 0],
+    'hist_cap2_texto'  => ['História · Cap. II — texto', 1],
+    'hist_cap3_titulo' => ['História · Cap. III — título', 0],
+    'hist_cap3_texto'  => ['História · Cap. III — texto', 1],
     'inter_verso'   => ['Interlúdio · verso (use &lt;br&gt; p/ quebrar)', 1],
     'inter_autor'   => ['Interlúdio · autor', 0],
     'inter_fecho'   => ['Interlúdio · fecho', 1],
@@ -126,6 +132,12 @@ $H = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
   .upl-btn:hover{ background:#e6d9bf; }
   .foto-estado{ font-size:.72rem; color:#8a8f88; }
   .foto-estado.ok{ color:#1f7a3d; } .foto-estado.erro{ color:#a5473f; }
+  .crono-linha{ display:grid; grid-template-columns:70px 70px 1fr 1fr 30px; gap:.4rem; align-items:center; margin-bottom:.45rem; }
+  @media (max-width:620px){ .crono-linha{ grid-template-columns:1fr 1fr; } }
+  .crono-linha input{ border:1px solid var(--e-line); border-radius:8px; padding:.4rem .5rem; font:inherit; font-size:.84rem; width:100%; }
+  .crono-x{ border:none; background:none; color:#a5473f; cursor:pointer; font-size:1rem; opacity:.6; }
+  .crono-x:hover{ opacity:1; }
+  .btn-crono{ margin-top:.3rem; border:1px solid var(--e-line); background:#efe7d6; color:#5c4a2c; border-radius:50px; padding:.4rem .9rem; font:inherit; font-size:.84rem; cursor:pointer; }
 </style>
 </head>
 <body>
@@ -244,6 +256,13 @@ $H = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
     </div>
 
     <div class="card">
+      <h2>Cronograma do dia</h2>
+      <p class="hint">Os momentos da festa. Acrescente ou remova conforme o vosso programa.</p>
+      <div id="cronoLista"></div>
+      <button type="button" class="btn-crono" onclick="addCronoLinha()">+ Momento</button>
+    </div>
+
+    <div class="card">
       <h2>Textos</h2>
       <p class="hint">Personalize as palavras do convite. Pode usar &lt;br&gt; para quebrar linhas.</p>
       <div class="textos-grade">
@@ -289,6 +308,26 @@ $H = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
   var CHAVES_PAL = <?= json_encode(chavesPaleta()) ?>;
   var modeloAtual = <?= json_encode($design['modelo']) ?>;
   var IMAGENS = <?= json_encode($design['imagens'] ?? imagensPadrao(), JSON_UNESCAPED_SLASHES) ?>;
+  var CRONOGRAMA = <?= json_encode($design['cronograma'] ?? cronogramaPadrao(), JSON_UNESCAPED_UNICODE) ?>;
+
+  // ---- Cronograma (lista de momentos) ----
+  function escAttr(s){ return String(s==null?'':s).replace(/"/g,'&quot;'); }
+  function renderCrono(){
+    var box=document.getElementById('cronoLista'); box.innerHTML='';
+    CRONOGRAMA.forEach(function(m,i){
+      var d=document.createElement('div'); d.className='crono-linha';
+      d.innerHTML =
+        '<input placeholder="20H30" value="'+escAttr(m.hora)+'" oninput="setCrono('+i+',\'hora\',this.value)">'+
+        '<input placeholder="Noite" value="'+escAttr(m.periodo)+'" oninput="setCrono('+i+',\'periodo\',this.value)">'+
+        '<input placeholder="Momento" value="'+escAttr(m.titulo)+'" oninput="setCrono('+i+',\'titulo\',this.value)">'+
+        '<input placeholder="Descrição" value="'+escAttr(m.desc)+'" oninput="setCrono('+i+',\'desc\',this.value)">'+
+        '<button type="button" class="crono-x" title="Remover" onclick="removeCrono('+i+')">✕</button>';
+      box.appendChild(d);
+    });
+  }
+  function setCrono(i,campo,val){ if(CRONOGRAMA[i]){ CRONOGRAMA[i][campo]=val; agenda(); } }
+  function addCronoLinha(){ CRONOGRAMA.push({hora:'',periodo:'',titulo:'',desc:''}); renderCrono(); }
+  function removeCrono(i){ CRONOGRAMA.splice(i,1); renderCrono(); atualizarPreview(); }
 
   // Envia uma foto para o servidor e atualiza o design/pré-visualização.
   function enviarFoto(slot, inp){
@@ -309,7 +348,7 @@ $H = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
 
   // Recolhe o design completo a partir dos controlos.
   function coletar(){
-    var d = { modelo: modeloAtual, evento:{}, paleta:{}, tipografia:{}, seccoes:{}, textos:{}, imagens: Object.assign({}, IMAGENS) };
+    var d = { modelo: modeloAtual, evento:{}, paleta:{}, tipografia:{}, seccoes:{}, textos:{}, imagens: Object.assign({}, IMAGENS), cronograma: CRONOGRAMA };
     var mapa = { ev:'evento', pal:'paleta', tip:'tipografia', sec:'seccoes', tex:'textos' };
     document.querySelectorAll('[data-g][data-k]').forEach(function(el){
       var grupo = mapa[el.getAttribute('data-g')];
@@ -372,6 +411,7 @@ $H = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
   }
 
   // Primeira pré-visualização
+  renderCrono();
   window.addEventListener('load', atualizarPreview);
 </script>
 </body>

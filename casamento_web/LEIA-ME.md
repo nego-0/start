@@ -102,6 +102,7 @@ O sistema tenta primeiro a ligação `local` (útil para testes em XAMPP/Wamp) e
 - **Paleta** — 11 cores que se propagam por todo o convite (incluindo o código QR).
 - **Tipografia** — três papéis (títulos, corpo e manuscrita). As fontes marcadas *(web)* precisam de internet; o modelo Esmeralda usa fontes locais e mantém o convite totalmente offline.
 - **Fotos** — carregue as quatro fotografias do convite (capa, história, interlúdio, passe). São redimensionadas e guardadas por evento em `uploads/eventos/{id}/`; ficam também embutidas na descarga offline.
+- **História & Cronograma** — os três capítulos da "nossa história" são editáveis, e o cronograma do dia é uma lista de momentos (hora, período, título, descrição) a que se acrescentam ou removem linhas.
 - **Secções** — ligue/desligue a história, o interlúdio, a contagem decrescente, o cronograma, o manual, as pétalas e a música.
 - **Textos** — edite as palavras do convite (aceita `<br>` para quebrar linhas).
 - **Data e casal** — os nomes e a data alimentam automaticamente o título, a contagem decrescente, o dia da semana e o botão de calendário.

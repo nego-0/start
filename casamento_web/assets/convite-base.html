@@ -163,7 +163,7 @@ body.opened #hero img{transform:scale(1)}
 .chapter .ch-eyebrow{font-size:10px;letter-spacing:.28em;text-transform:uppercase;color:var(--gold);text-indent:.28em;margin-bottom:6px;font-weight:400}
 .chapter h3{font-family:var(--ff-serif);font-weight:600;font-size:23px;color:var(--forest-deep);line-height:1.2;margin-bottom:12px}
 .chapter p{font-size:14.5px;line-height:1.85;color:var(--text);font-weight:300}
-.chapter p .drop{font-family:var(--ff-serif);font-weight:600;font-size:2.1em;line-height:.7;color:var(--gold);float:left;padding:6px 8px 0 0}
+#historia .chapter.primeiro p::first-letter{font-family:var(--ff-serif);font-weight:600;font-size:2.1em;line-height:.7;color:var(--gold);float:left;padding:6px 8px 0 0}
 
 .story-photo{position:relative;overflow:hidden;border-radius:16px;box-shadow:var(--shadow);margin:0 30px 8px}
 .story-photo.full{margin:0 0 8px;border-radius:0}
@@ -360,23 +360,23 @@ footer .fnote{margin-top:26px;font-family:var(--ff-serif);font-style:italic;font
     <div class="story-photo rv"><img src="{{IMG_HISTORIA}}" alt="As mãos que se encontraram" loading="lazy"></div>
     <div class="thread rv">
       <div class="spine"><i></i></div>
-      <div class="chapter">
+      <div class="chapter primeiro">
         <div class="dot"></div>
         <p class="ch-eyebrow">Capítulo I</p>
-        <h3>Um olhar, por acaso</h3>
-        <p><span class="drop">H</span>á encontros que chegam sem aviso. O deles aconteceu assim: dois caminhos que se cruzaram nos corredores da mesma escola da vida, num tempo em que nenhum dos dois procurava nada — e, talvez por isso, encontraram tudo.</p>
+        <h3>{{HIST_CAP1_TITULO}}</h3>
+        <p>{{HIST_CAP1_TEXTO}}</p>
       </div>
       <div class="chapter">
         <div class="dot"></div>
         <p class="ch-eyebrow">Capítulo II</p>
-        <h3>Devagar, como as coisas certas</h3>
-        <p>Primeiro foi um sorriso. Depois, as conversas que teimavam em não terminar, o silêncio confortável, a vontade de estar perto sem precisar de motivo. A amizade fez o que faz sempre que é verdadeira: abriu caminho ao amor.</p>
+        <h3>{{HIST_CAP2_TITULO}}</h3>
+        <p>{{HIST_CAP2_TEXTO}}</p>
       </div>
       <div class="chapter">
         <div class="dot"></div>
         <p class="ch-eyebrow">Capítulo III</p>
-        <h3>E o amor floresceu</h3>
-        <p>Um dia, olharam um para o outro e perceberam que o futuro já tinha nome. Sem pressa, como florescem as coisas que vieram para ficar.</p>
+        <h3>{{HIST_CAP3_TITULO}}</h3>
+        <p>{{HIST_CAP3_TEXTO}}</p>
       </div>
     </div>
   </section>
@@ -430,26 +430,7 @@ footer .fnote{margin-top:26px;font-family:var(--ff-serif);font-style:italic;font
       <p class="tsub">{{CRONO_SUB}}</p>
       <div class="timeline">
         <div class="spine"><i></i></div>
-        <div class="t-item">
-          <div class="half time"><div class="hh">20H30<small>Noite</small></div></div>
-          <div class="node"><svg viewBox="0 0 24 24"><circle cx="9" cy="14.5" r="4.6"/><circle cx="15" cy="14.5" r="4.6"/><path d="M9 6.6l1.5 1.5L9 9.6 7.5 8.1z" fill="currentColor" stroke="none"/><path d="M9 9.6v.8" /></svg></div>
-          <div class="half desc"><div class="tt">Chegada dos noivos<em>O grande momento</em></div></div>
-        </div>
-        <div class="t-item">
-          <div class="half time"><div class="hh">21H00<small>Noite</small></div></div>
-          <div class="node"><svg viewBox="0 0 24 24"><path d="M4 20.5h16" stroke-linecap="round"/><path d="M5.5 20V14.6c0-.9.7-1.6 1.6-1.6h9.8c.9 0 1.6.7 1.6 1.6V20"/><path d="M8.4 13v-2.6c0-.7.5-1.2 1.2-1.2h4.8c.7 0 1.2.5 1.2 1.2V13"/><path d="M12 9.2V6.6"/><path d="M12 3.8c1 .7 1 2 0 2.7-1-.7-1-2 0-2.7z" fill="currentColor" stroke="none"/><path d="M5.8 16.6h12.4" opacity=".55"/></svg></div>
-          <div class="half desc"><div class="tt">Corte do bolo<em>Doçura partilhada</em></div></div>
-        </div>
-        <div class="t-item">
-          <div class="half time"><div class="hh">21H20<small>Noite</small></div></div>
-          <div class="node"><svg viewBox="0 0 24 24"><path d="M9 17.4V5.2l9-1.8v11.4"/><ellipse cx="6.8" cy="17.6" rx="2.5" ry="1.9" fill="currentColor" stroke="none"/><ellipse cx="15.8" cy="14.8" rx="2.5" ry="1.9" fill="currentColor" stroke="none"/><path d="M9 8.6l9-1.8"/></svg></div>
-          <div class="half desc"><div class="tt">Abertura da pista<em>A dança começa</em></div></div>
-        </div>
-        <div class="t-item">
-          <div class="half time"><div class="hh">21H30<small>Noite</small></div></div>
-          <div class="node"><svg viewBox="0 0 24 24"><path d="M3.8 16.8h16.4" stroke-linecap="round"/><path d="M5.2 16.8a6.8 6.8 0 0 1 13.6 0"/><circle cx="12" cy="8.4" r="1"/><path d="M6.6 19.6h10.8" stroke-linecap="round"/><path d="M9.4 5.6c.7-.7.7-1.7 0-2.4M12 5c.7-.7.7-1.7 0-2.4M14.6 5.6c.7-.7.7-1.7 0-2.4" opacity=".7" stroke-linecap="round"/></svg></div>
-          <div class="half desc"><div class="tt">Abertura do buffet<em>À mesa, em festa</em></div></div>
-        </div>
+        {{CRONO_ITENS}}
       </div>
     </div>
   </section>

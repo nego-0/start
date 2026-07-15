@@ -40,6 +40,12 @@ function textosPadrao(): array {
         'hist_titulo'   => 'Dois olhares, um caminho',
         'hist_citacao'  => 'Amamos aquilo que nos completa.',
         'hist_autor'    => 'Goethe',
+        'hist_cap1_titulo' => 'Um olhar, por acaso',
+        'hist_cap1_texto'  => 'Há encontros que chegam sem aviso. O deles aconteceu assim: dois caminhos que se cruzaram nos corredores da mesma escola da vida, num tempo em que nenhum dos dois procurava nada — e, talvez por isso, encontraram tudo.',
+        'hist_cap2_titulo' => 'Devagar, como as coisas certas',
+        'hist_cap2_texto'  => 'Primeiro foi um sorriso. Depois, as conversas que teimavam em não terminar, o silêncio confortável, a vontade de estar perto sem precisar de motivo. A amizade fez o que faz sempre que é verdadeira: abriu caminho ao amor.',
+        'hist_cap3_titulo' => 'E o amor floresceu',
+        'hist_cap3_texto'  => 'Um dia, olharam um para o outro e perceberam que o futuro já tinha nome. Sem pressa, como florescem as coisas que vieram para ficar.',
         'inter_verso'   => '&ldquo;Que não seja imortal, posto que é chama,<br>mas que seja infinito enquanto dure.&rdquo;',
         'inter_autor'   => 'Vinicius de Moraes',
         'inter_fecho'   => 'Duas vidas, um só caminho —<br>e todo o tempo do mundo pela frente.',
@@ -71,6 +77,34 @@ function rotulosImagens(): array {
         'interludio' => 'Interlúdio (fundo do verso)',
         'acesso'     => 'Passe de entrada',
     ];
+}
+
+/** Momentos padrão do cronograma do dia. */
+function cronogramaPadrao(): array {
+    return [
+        ['hora' => '20H30', 'periodo' => 'Noite', 'titulo' => 'Chegada dos noivos',  'desc' => 'O grande momento'],
+        ['hora' => '21H00', 'periodo' => 'Noite', 'titulo' => 'Corte do bolo',        'desc' => 'Doçura partilhada'],
+        ['hora' => '21H20', 'periodo' => 'Noite', 'titulo' => 'Abertura da pista',    'desc' => 'A dança começa'],
+        ['hora' => '21H30', 'periodo' => 'Noite', 'titulo' => 'Abertura do buffet',   'desc' => 'À mesa, em festa'],
+    ];
+}
+
+/** Constrói o HTML dos itens do cronograma a partir do design. */
+function cronogramaHtml(array $design): string {
+    $itens = $design['cronograma'] ?? cronogramaPadrao();
+    $esc = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
+    $node = '<svg viewBox="0 0 24 24"><rect x="7" y="7" width="10" height="10"/></svg>';
+    $out = '';
+    foreach ($itens as $it) {
+        $hora = $esc($it['hora'] ?? ''); $per = $esc($it['periodo'] ?? '');
+        $tit = $esc($it['titulo'] ?? ''); $desc = $esc($it['desc'] ?? '');
+        $peq = $per !== '' ? "<small>$per</small>" : '';
+        $em  = $desc !== '' ? "<em>$desc</em>" : '';
+        $out .= "<div class=\"t-item\"><div class=\"half time\"><div class=\"hh\">$hora$peq</div></div>"
+              . "<div class=\"node\">$node</div>"
+              . "<div class=\"half desc\"><div class=\"tt\">$tit$em</div></div></div>";
+    }
+    return $out;
 }
 
 /** Secções que podem ser mostradas/ocultadas, e o seu rótulo. */
@@ -122,6 +156,7 @@ function designPadraoBruto(): array {
         'tipografia' => $m['tipografia'],
         'seccoes'    => seccoesPadrao(),
         'imagens'    => imagensPadrao(),
+        'cronograma' => cronogramaPadrao(),
         'textos'     => textosPadrao(),
     ];
 }
@@ -220,6 +255,22 @@ function normalizarDesign($data): array {
     foreach (imagensPadrao() as $k => $def) {
         $v = validarImagem($im[$k] ?? null);
         if ($v !== null) $out['imagens'][$k] = $v;
+    }
+
+    // Cronograma (lista de momentos; ignora linhas vazias, no máximo 20)
+    if (isset($data['cronograma']) && is_array($data['cronograma'])) {
+        $cr = [];
+        foreach (array_slice($data['cronograma'], 0, 20) as $it) {
+            if (!is_array($it)) continue;
+            $lin = [
+                'hora'    => mb_substr(trim((string)($it['hora'] ?? '')), 0, 20),
+                'periodo' => mb_substr(trim((string)($it['periodo'] ?? '')), 0, 20),
+                'titulo'  => mb_substr(trim((string)($it['titulo'] ?? '')), 0, 80),
+                'desc'    => mb_substr(trim((string)($it['desc'] ?? '')), 0, 120),
+            ];
+            if ($lin['hora'] !== '' || $lin['titulo'] !== '') $cr[] = $lin;
+        }
+        $out['cronograma'] = $cr;
     }
 
     // Textos (mantém o padrão quando ausente)
@@ -491,6 +542,12 @@ function mapaTextos(array $design): array {
         'HIST_TITULO'   => $t['hist_titulo'],
         'HIST_CITACAO'  => $t['hist_citacao'],
         'HIST_AUTOR'    => $t['hist_autor'],
+        'HIST_CAP1_TITULO' => $t['hist_cap1_titulo'] ?? '',
+        'HIST_CAP1_TEXTO'  => $t['hist_cap1_texto'] ?? '',
+        'HIST_CAP2_TITULO' => $t['hist_cap2_titulo'] ?? '',
+        'HIST_CAP2_TEXTO'  => $t['hist_cap2_texto'] ?? '',
+        'HIST_CAP3_TITULO' => $t['hist_cap3_titulo'] ?? '',
+        'HIST_CAP3_TEXTO'  => $t['hist_cap3_texto'] ?? '',
         'INTER_VERSO'   => $t['inter_verso'],
         'INTER_AUTOR'   => $t['inter_autor'],
         'INTER_FECHO'   => $t['inter_fecho'],
@@ -509,6 +566,8 @@ function mapaTextos(array $design): array {
     foreach (imagensPadrao() as $k => $def) {
         $tokens['IMG_' . strtoupper($k)] = $esc(validarImagem($im[$k] ?? null) ?? $def);
     }
+    // Cronograma (HTML gerado)
+    $tokens['CRONO_ITENS'] = cronogramaHtml($design);
     return array_merge($tokens, tokensDerivados($design));
 }
 
