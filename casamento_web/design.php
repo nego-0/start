@@ -157,8 +157,27 @@ function designPadraoBruto(): array {
         'seccoes'    => seccoesPadrao(),
         'imagens'    => imagensPadrao(),
         'cronograma' => cronogramaPadrao(),
+        'rsvp_perguntas' => [],
         'textos'     => textosPadrao(),
     ];
+}
+
+/** Normaliza a lista de perguntas de RSVP (label, tipo, opções). */
+function normalizarPerguntas($data): array {
+    if (!is_array($data)) return [];
+    $out = [];
+    foreach (array_slice($data, 0, 12) as $p) {
+        if (!is_array($p)) continue;
+        $label = trim((string)($p['label'] ?? ''));
+        if ($label === '') continue;
+        $tipo = in_array($p['tipo'] ?? '', ['texto', 'opcoes'], true) ? $p['tipo'] : 'texto';
+        $ops = [];
+        if ($tipo === 'opcoes' && is_array($p['opcoes'] ?? null)) {
+            foreach ($p['opcoes'] as $o) { $o = trim((string)$o); if ($o !== '') $ops[] = mb_substr($o, 0, 80); }
+        }
+        $out[] = ['label' => mb_substr($label, 0, 120), 'tipo' => $tipo, 'opcoes' => array_slice($ops, 0, 12)];
+    }
+    return $out;
 }
 
 /** Caminho de imagem seguro (só assets/convite/ ou uploads/), ou null. */
@@ -278,6 +297,9 @@ function normalizarDesign($data): array {
     foreach (textosPadrao() as $k => $def) {
         if (isset($tx[$k]) && is_string($tx[$k])) $out['textos'][$k] = $tx[$k];
     }
+
+    // Perguntas de RSVP personalizadas
+    if (isset($data['rsvp_perguntas'])) $out['rsvp_perguntas'] = normalizarPerguntas($data['rsvp_perguntas']);
 
     // Segurança: substitui qualquer %NOIVOS% remanescente pelos nomes do evento.
     return substituirNomesNosTextos($out);

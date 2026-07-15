@@ -266,6 +266,13 @@ $H = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
     </div>
 
     <div class="card">
+      <h2>Perguntas de RSVP</h2>
+      <p class="hint">Perguntas extra que o convidado responde ao confirmar (ex.: menu, alergias, música). Nas opções, separe por vírgulas.</p>
+      <div id="perguntasLista"></div>
+      <button type="button" class="btn-crono" onclick="addPergunta()">+ Pergunta</button>
+    </div>
+
+    <div class="card">
       <h2>Textos</h2>
       <p class="hint">Personalize as palavras do convite. Pode usar &lt;br&gt; para quebrar linhas.</p>
       <div class="textos-grade">
@@ -334,6 +341,28 @@ $H = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
   function addCronoLinha(){ CRONOGRAMA.push({hora:'',periodo:'',titulo:'',desc:''}); renderCrono(); }
   function removeCrono(i){ CRONOGRAMA.splice(i,1); renderCrono(); atualizarPreview(); }
 
+  // ---- Perguntas de RSVP ----
+  var PERGUNTAS = <?= json_encode($design['rsvp_perguntas'] ?? [], JSON_UNESCAPED_UNICODE) ?>;
+  function renderPerguntas(){
+    var box=document.getElementById('perguntasLista'); box.innerHTML='';
+    PERGUNTAS.forEach(function(p,i){
+      var d=document.createElement('div'); d.className='crono-linha'; d.style.gridTemplateColumns='1fr 120px 1fr 30px';
+      d.innerHTML =
+        '<input placeholder="Pergunta" value="'+escAttr(p.label)+'" oninput="setPerg('+i+',\'label\',this.value)">'+
+        '<select onchange="setPergTipo('+i+',this.value)">'+
+          '<option value="texto"'+(p.tipo==='texto'?' selected':'')+'>Texto livre</option>'+
+          '<option value="opcoes"'+(p.tipo==='opcoes'?' selected':'')+'>Opções</option></select>'+
+        '<input placeholder="Opção 1, Opção 2…" value="'+escAttr((p.opcoes||[]).join(', '))+'" '+(p.tipo==='opcoes'?'':'disabled')+' oninput="setPergOpcoes('+i+',this.value)">'+
+        '<button type="button" class="crono-x" title="Remover" onclick="removePergunta('+i+')">✕</button>';
+      box.appendChild(d);
+    });
+  }
+  function setPerg(i,campo,val){ if(PERGUNTAS[i]){ PERGUNTAS[i][campo]=val; agenda(); } }
+  function setPergTipo(i,val){ if(PERGUNTAS[i]){ PERGUNTAS[i].tipo=val; renderPerguntas(); agenda(); } }
+  function setPergOpcoes(i,val){ if(PERGUNTAS[i]){ PERGUNTAS[i].opcoes=val.split(',').map(function(s){return s.trim();}).filter(Boolean); agenda(); } }
+  function addPergunta(){ PERGUNTAS.push({label:'',tipo:'texto',opcoes:[]}); renderPerguntas(); }
+  function removePergunta(i){ PERGUNTAS.splice(i,1); renderPerguntas(); }
+
   // Envia uma foto para o servidor e atualiza o design/pré-visualização.
   function enviarFoto(slot, inp){
     var f = inp.files && inp.files[0]; if(!f) return;
@@ -353,7 +382,7 @@ $H = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
 
   // Recolhe o design completo a partir dos controlos.
   function coletar(){
-    var d = { modelo: modeloAtual, evento:{}, paleta:{}, tipografia:{}, seccoes:{}, textos:{}, imagens: Object.assign({}, IMAGENS), cronograma: CRONOGRAMA };
+    var d = { modelo: modeloAtual, evento:{}, paleta:{}, tipografia:{}, seccoes:{}, textos:{}, imagens: Object.assign({}, IMAGENS), cronograma: CRONOGRAMA, rsvp_perguntas: PERGUNTAS };
     var mapa = { ev:'evento', pal:'paleta', tip:'tipografia', sec:'seccoes', tex:'textos' };
     document.querySelectorAll('[data-g][data-k]').forEach(function(el){
       var grupo = mapa[el.getAttribute('data-g')];
@@ -422,6 +451,7 @@ $H = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
     document.getElementById('pvEcra').classList.toggle('sel', m==='ecra');
   }
   renderCrono();
+  renderPerguntas();
   modoPreview('movel');
   window.addEventListener('load', atualizarPreview);
 </script>

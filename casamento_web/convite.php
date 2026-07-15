@@ -27,7 +27,12 @@ if ($valido) {
     $venueTitulo = $design['textos']['venue_titulo'];
     $venueLocal  = $design['textos']['venue_local'];
     $dataIsoJs   = $design['evento']['data_iso'] . 'T' . $design['evento']['hora'] . ':00';
+    $perguntas   = $design['rsvp_perguntas'] ?? [];
+    $respSalvas  = [];
+    if (!empty($c['rsvp_extra'])) { $tmp = json_decode($c['rsvp_extra'], true); if (is_array($tmp)) $respSalvas = $tmp; }
 }
+$perguntas = $perguntas ?? [];
+$respSalvas = $respSalvas ?? [];
 $whats = EVENTO['whatsapp'];
 ?>
 <!DOCTYPE html>
@@ -214,6 +219,22 @@ $whats = EVENTO['whatsapp'];
             </div>
           </div>
           <?php endif; ?>
+
+          <?php foreach ($perguntas as $qi => $q): $ans = $respSalvas[$q['label']] ?? ''; ?>
+          <div class="campo">
+            <label><?= htmlspecialchars($q['label']) ?></label>
+            <?php if ($q['tipo'] === 'opcoes' && !empty($q['opcoes'])): ?>
+              <select class="perg" data-label="<?= htmlspecialchars($q['label'], ENT_QUOTES) ?>">
+                <option value="">—</option>
+                <?php foreach ($q['opcoes'] as $op): ?>
+                  <option value="<?= htmlspecialchars($op, ENT_QUOTES) ?>"<?= $ans === $op ? ' selected' : '' ?>><?= htmlspecialchars($op) ?></option>
+                <?php endforeach; ?>
+              </select>
+            <?php else: ?>
+              <input type="text" class="perg" data-label="<?= htmlspecialchars($q['label'], ENT_QUOTES) ?>" value="<?= htmlspecialchars($ans) ?>" placeholder="A sua resposta">
+            <?php endif; ?>
+          </div>
+          <?php endforeach; ?>
         </div>
 
         <div class="campo">
@@ -305,7 +326,9 @@ async function enviar(){
   }
   const agora=()=>{ const d=new Date(),p=n=>String(n).padStart(2,'0');
     return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+' '+p(d.getHours())+':'+p(d.getMinutes())+':'+p(d.getSeconds()); };
-  const payload={ codigo:CODIGO, decisao:escolha, confirmados, mensagem:$('mensagem').value, membros, ts:agora() };
+  const respostas={};
+  document.querySelectorAll('.perg').forEach(function(el){ var v=el.value.trim(); if(v) respostas[el.dataset.label]=v; });
+  const payload={ codigo:CODIGO, decisao:escolha, confirmados, mensagem:$('mensagem').value, membros, respostas, ts:agora() };
   const r=await fetch('api.php?action=rsvp_submit',{method:'POST',body:JSON.stringify(payload)});
   const d=await r.json();
   btn.disabled=false; btn.textContent='Confirmar resposta';

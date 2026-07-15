@@ -97,6 +97,11 @@ $col = $conn->query("SHOW COLUMNS FROM {$P}convites LIKE 'mostrar_numero'");
 if ($col && $col->num_rows === 0) {
     $conn->query("ALTER TABLE {$P}convites ADD COLUMN mostrar_numero TINYINT(1) DEFAULT 1 AFTER sufixo");
 }
+// Respostas às perguntas personalizadas de RSVP (JSON).
+$col = $conn->query("SHOW COLUMNS FROM {$P}convites LIKE 'rsvp_extra'");
+if ($col && $col->num_rows === 0) {
+    $conn->query("ALTER TABLE {$P}convites ADD COLUMN rsvp_extra TEXT DEFAULT NULL AFTER rsvp_mensagem");
+}
 
 // ============================================================
 // Multi-inquilino (Fase 0): contas, eventos e isolamento por evento.

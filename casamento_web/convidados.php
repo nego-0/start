@@ -25,7 +25,7 @@ if (($_GET['api'] ?? '') === '1') {
     switch ($acao) {
         case 'listar':
             $sql = "SELECT id, codigo, nome_exibicao, sufixo, mostrar_numero, tipo, lado, lugares, telefone,
-                           rsvp_estado, rsvp_confirmados
+                           rsvp_estado, rsvp_confirmados, rsvp_extra
                     FROM {$P}convites WHERE evento_id=$eid ORDER BY nome_exibicao";
             $resp = ['ok' => true, 'convites' => $conn->query($sql)->fetch_all(MYSQLI_ASSOC)];
             break;
@@ -142,6 +142,7 @@ $s = estatisticas($conn);
   .vazio{color:#9aa093;font-style:italic;padding:1rem 0}
   textarea{width:100%;border:1px solid #e6dfce;border-radius:8px;padding:.5rem .6rem;font:inherit;font-size:.86rem;resize:vertical}
   #importEstado.ok{color:#1f7a3d} #importEstado.erro{color:#a5473f}
+  .resp{font-size:.74rem;color:#8a7a52;margin-top:.15rem}
 </style></head><body>
 <div class="topo">
   <h1>Convidados</h1><span class="badge"><?= $H($nomeEvento) ?></span>
@@ -220,8 +221,10 @@ $s = estatisticas($conn);
       var rsvpLink = BASE+'/convite.php?c='+c.codigo;
       var digLink  = BASE+'/convite-digital.php?c='+c.codigo;
       var tr=document.createElement('tr');
+      var extra='';
+      if(c.rsvp_extra){ try{ var o=JSON.parse(c.rsvp_extra); var ps=Object.keys(o).map(function(k){return esc(k)+': <b>'+esc(o[k])+'</b>';}); if(ps.length) extra='<div class="resp">'+ps.join(' · ')+'</div>'; }catch(e){} }
       tr.innerHTML =
-        '<td><strong>'+esc(c.nome_exibicao)+'</strong></td>'+
+        '<td><strong>'+esc(c.nome_exibicao)+'</strong>'+extra+'</td>'+
         '<td>'+c.lugares+'</td>'+
         '<td>'+esc(c.tipo)+'</td>'+
         '<td><span class="est '+c.rsvp_estado+'">'+c.rsvp_estado+(c.rsvp_confirmados?(' ('+c.rsvp_confirmados+')'):'')+'</span></td>'+
