@@ -108,6 +108,7 @@ O sistema tenta primeiro a ligação `local` (útil para testes em XAMPP/Wamp) e
 - **História & Cronograma** — os três capítulos da "nossa história" são editáveis, e o cronograma do dia é uma lista de momentos (hora, período, título, descrição) a que se acrescentam ou removem linhas.
 - **Perguntas de RSVP** — perguntas extra (texto livre ou opções) que o convidado responde ao confirmar (ex.: menu, alergias, música). As respostas ficam guardadas por convite e aparecem na lista de convidados.
 - **Secções** — ligue/desligue a história, o interlúdio, a contagem decrescente, o cronograma, o manual, as pétalas e a música.
+- **Páginas & secções extra** — acrescente páginas próprias ao convite a partir de uma biblioteca de modelos de secção — **texto** (sobretítulo, título e parágrafo), **citação** (verso e autor), **lista** (título e itens, ex.: padrinhos, informações úteis) e **separador** decorativo. Cada secção pode ser reordenada ou removida; todas seguem a paleta e a tipografia do modelo e aparecem antes do passe de entrada.
 - **Textos** — edite as palavras do convite (aceita `<br>` para quebrar linhas).
 - **Data e casal** — os nomes e a data alimentam automaticamente o título, a contagem decrescente, o dia da semana e o botão de calendário.
 

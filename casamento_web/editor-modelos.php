@@ -141,6 +141,14 @@ $H = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
   .crono-x{ border:none; background:none; color:#a5473f; cursor:pointer; font-size:1rem; opacity:.6; }
   .crono-x:hover{ opacity:1; }
   .btn-crono{ margin-top:.3rem; border:1px solid var(--e-line); background:#efe7d6; color:#5c4a2c; border-radius:50px; padding:.4rem .9rem; font:inherit; font-size:.84rem; cursor:pointer; }
+  .sx-card{ border:1px solid var(--e-line); border-radius:12px; padding:.6rem .7rem; margin-bottom:.6rem; background:#fbf8f1; }
+  .sx-cab{ display:flex; align-items:center; gap:.3rem; margin-bottom:.5rem; color:#5c4a2c; font-size:.86rem; }
+  .sx-cab .sp{ flex:1; }
+  .sx-b{ border:1px solid var(--e-line); background:#fff; border-radius:7px; padding:.2rem .45rem; cursor:pointer; font-size:.82rem; }
+  .sx-b.x{ color:#a5473f; }
+  .sx-campos{ display:flex; flex-direction:column; gap:.4rem; }
+  .sx-campos input, .sx-campos textarea{ width:100%; border:1px solid var(--e-line); border-radius:8px; padding:.4rem .55rem; font:inherit; font-size:.86rem; }
+  .sx-campos textarea{ resize:vertical; }
 </style>
 </head>
 <body>
@@ -273,6 +281,18 @@ $H = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
     </div>
 
     <div class="card">
+      <h2>Páginas &amp; secções extra</h2>
+      <p class="hint">Acrescente páginas ao convite (padrinhos, informações, uma dedicatória, um separador). Aparecem antes do passe de entrada.</p>
+      <div id="sxLista"></div>
+      <div class="lin" style="flex-wrap:wrap;gap:.4rem">
+        <button type="button" class="btn-crono" onclick="addSX('texto')">+ Texto</button>
+        <button type="button" class="btn-crono" onclick="addSX('citacao')">+ Citação</button>
+        <button type="button" class="btn-crono" onclick="addSX('lista')">+ Lista</button>
+        <button type="button" class="btn-crono" onclick="addSX('separador')">+ Separador</button>
+      </div>
+    </div>
+
+    <div class="card">
       <h2>Textos</h2>
       <p class="hint">Personalize as palavras do convite. Pode usar &lt;br&gt; para quebrar linhas.</p>
       <div class="textos-grade">
@@ -363,6 +383,35 @@ $H = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
   function addPergunta(){ PERGUNTAS.push({label:'',tipo:'texto',opcoes:[]}); renderPerguntas(); }
   function removePergunta(i){ PERGUNTAS.splice(i,1); renderPerguntas(); }
 
+  // ---- Páginas & secções extra ----
+  var SECCOES_EXTRA = <?= json_encode($design['seccoes_extra'] ?? [], JSON_UNESCAPED_UNICODE) ?>;
+  var SX_ROTULO = { texto:'Texto', citacao:'Citação', lista:'Lista', separador:'Separador' };
+  function inp(i,campo,ph,val){ return '<input placeholder="'+ph+'" value="'+escAttr(val||'')+'" oninput="setSX('+i+',\''+campo+'\',this.value)">'; }
+  function txa(i,campo,ph,val){ return '<textarea rows="3" placeholder="'+ph+'" oninput="setSX('+i+',\''+campo+'\',this.value)">'+escAttr(val||'')+'</textarea>'; }
+  function camposSX(s,i){
+    if(s.tipo==='texto') return inp(i,'eyebrow','Sobretítulo (opcional)',s.eyebrow)+inp(i,'titulo','Título',s.titulo)+txa(i,'texto','Texto',s.texto);
+    if(s.tipo==='citacao') return txa(i,'verso','Verso / citação',s.verso)+inp(i,'autor','Autor',s.autor);
+    if(s.tipo==='lista') return inp(i,'titulo','Título (ex.: Padrinhos)',s.titulo)+txa(i,'itens','Um item por linha',s.itens);
+    if(s.tipo==='separador') return inp(i,'texto','Símbolo/texto (ex.: ✦)',s.texto);
+    return '';
+  }
+  function renderSX(){
+    var box=document.getElementById('sxLista'); box.innerHTML='';
+    SECCOES_EXTRA.forEach(function(s,i){
+      var d=document.createElement('div'); d.className='sx-card';
+      d.innerHTML='<div class="sx-cab"><b>'+(SX_ROTULO[s.tipo]||s.tipo)+'</b><span class="sp"></span>'+
+        '<button type="button" class="sx-b" title="Subir" onclick="moveSX('+i+',-1)">↑</button>'+
+        '<button type="button" class="sx-b" title="Descer" onclick="moveSX('+i+',1)">↓</button>'+
+        '<button type="button" class="sx-b x" title="Remover" onclick="removeSX('+i+')">✕</button></div>'+
+        '<div class="sx-campos">'+camposSX(s,i)+'</div>';
+      box.appendChild(d);
+    });
+  }
+  function setSX(i,campo,val){ if(SECCOES_EXTRA[i]){ SECCOES_EXTRA[i][campo]=val; agenda(); } }
+  function addSX(tipo){ SECCOES_EXTRA.push({tipo:tipo}); renderSX(); atualizarPreview(); }
+  function removeSX(i){ SECCOES_EXTRA.splice(i,1); renderSX(); atualizarPreview(); }
+  function moveSX(i,dir){ var j=i+dir; if(j<0||j>=SECCOES_EXTRA.length) return; var t=SECCOES_EXTRA[i]; SECCOES_EXTRA[i]=SECCOES_EXTRA[j]; SECCOES_EXTRA[j]=t; renderSX(); atualizarPreview(); }
+
   // Envia uma foto para o servidor e atualiza o design/pré-visualização.
   function enviarFoto(slot, inp){
     var f = inp.files && inp.files[0]; if(!f) return;
@@ -382,7 +431,7 @@ $H = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
 
   // Recolhe o design completo a partir dos controlos.
   function coletar(){
-    var d = { modelo: modeloAtual, evento:{}, paleta:{}, tipografia:{}, seccoes:{}, textos:{}, imagens: Object.assign({}, IMAGENS), cronograma: CRONOGRAMA, rsvp_perguntas: PERGUNTAS };
+    var d = { modelo: modeloAtual, evento:{}, paleta:{}, tipografia:{}, seccoes:{}, textos:{}, imagens: Object.assign({}, IMAGENS), cronograma: CRONOGRAMA, seccoes_extra: SECCOES_EXTRA, rsvp_perguntas: PERGUNTAS };
     var mapa = { ev:'evento', pal:'paleta', tip:'tipografia', sec:'seccoes', tex:'textos' };
     document.querySelectorAll('[data-g][data-k]').forEach(function(el){
       var grupo = mapa[el.getAttribute('data-g')];
@@ -452,6 +501,7 @@ $H = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
   }
   renderCrono();
   renderPerguntas();
+  renderSX();
   modoPreview('movel');
   window.addEventListener('load', atualizarPreview);
 </script>

@@ -157,9 +157,83 @@ function designPadraoBruto(): array {
         'seccoes'    => seccoesPadrao(),
         'imagens'    => imagensPadrao(),
         'cronograma' => cronogramaPadrao(),
+        'seccoes_extra' => [],
         'rsvp_perguntas' => [],
         'textos'     => textosPadrao(),
     ];
+}
+
+/** Tipos de secção/página que se podem acrescentar ao convite. */
+function tiposSeccaoExtra(): array {
+    return [
+        'texto'     => 'Texto (sobretítulo, título e parágrafo)',
+        'citacao'   => 'Citação (verso e autor)',
+        'lista'     => 'Lista (título e itens — padrinhos, informações…)',
+        'separador' => 'Separador decorativo',
+    ];
+}
+
+/** Normaliza as secções extra (tipo + campos), no máximo 20. */
+function normalizarSeccoesExtra($data): array {
+    if (!is_array($data)) return [];
+    $tipos = tiposSeccaoExtra();
+    $out = [];
+    foreach (array_slice($data, 0, 20) as $s) {
+        if (!is_array($s)) continue;
+        $tipo = $s['tipo'] ?? '';
+        if (!isset($tipos[$tipo])) continue;
+        $t = fn($k, $n = 200) => mb_substr(trim((string)($s[$k] ?? '')), 0, $n);
+        if ($tipo === 'texto') {
+            $out[] = ['tipo' => 'texto', 'eyebrow' => $t('eyebrow', 80), 'titulo' => $t('titulo', 120), 'texto' => $t('texto', 1200)];
+        } elseif ($tipo === 'citacao') {
+            $out[] = ['tipo' => 'citacao', 'verso' => $t('verso', 400), 'autor' => $t('autor', 80)];
+        } elseif ($tipo === 'lista') {
+            $out[] = ['tipo' => 'lista', 'titulo' => $t('titulo', 120), 'itens' => $t('itens', 1200)];
+        } elseif ($tipo === 'separador') {
+            $out[] = ['tipo' => 'separador', 'texto' => $t('texto', 40)];
+        }
+    }
+    return $out;
+}
+
+/** Constrói o HTML das secções extra (texto do casal escapado + quebras). */
+function seccoesExtraHtml(array $design): string {
+    $itens = $design['seccoes_extra'] ?? [];
+    if (!$itens) return '';
+    $esc = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
+    $rich = fn($s) => nl2br(htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'));
+    $out = '';
+    foreach ($itens as $s) {
+        $tipo = $s['tipo'];
+        if ($tipo === 'texto') {
+            $out .= '<section class="page pad" style="text-align:center">'
+                 . ($s['eyebrow'] !== '' ? '<span class="eyebrow rv">' . $esc($s['eyebrow']) . '</span>' : '')
+                 . '<h2 class="rv d1" style="font-family:var(--ff-serif);font-weight:600;color:var(--forest);font-size:clamp(26px,7vw,38px);line-height:1.15">' . $esc($s['titulo']) . '</h2>'
+                 . '<div class="rule rv d1"></div>'
+                 . '<p class="rv d2" style="font-family:var(--ff-serif);font-size:17px;line-height:1.9;color:var(--text);max-width:540px;margin:14px auto 0">' . $rich($s['texto']) . '</p>'
+                 . '</section>';
+        } elseif ($tipo === 'citacao') {
+            $out .= '<section class="page pad" style="text-align:center;background:var(--cream)">'
+                 . '<div class="rule rv"></div>'
+                 . '<blockquote class="rv d1" style="font-family:var(--ff-serif);font-style:italic;font-size:clamp(20px,6vw,28px);line-height:1.5;color:var(--forest);max-width:560px;margin:10px auto">' . $rich($s['verso']) . '</blockquote>'
+                 . ($s['autor'] !== '' ? '<cite class="rv d2" style="display:block;font-family:var(--ff-script);font-size:24px;color:var(--gold);margin-top:8px">' . $esc($s['autor']) . '</cite>' : '')
+                 . '</section>';
+        } elseif ($tipo === 'lista') {
+            $linhas = array_filter(array_map('trim', preg_split('/\r\n|\r|\n/', (string)$s['itens'])));
+            $li = '';
+            foreach ($linhas as $l) $li .= '<div style="font-family:var(--ff-serif);font-size:18px;color:var(--text);padding:6px 0;border-bottom:1px solid var(--sand)">' . $esc($l) . '</div>';
+            $out .= '<section class="page pad" style="text-align:center">'
+                 . '<h2 class="rv d1" style="font-family:var(--ff-serif);font-weight:600;color:var(--forest);font-size:clamp(24px,6vw,34px)">' . $esc($s['titulo']) . '</h2>'
+                 . '<div class="rule rv d1"></div>'
+                 . '<div class="rv d2" style="max-width:460px;margin:14px auto 0">' . $li . '</div>'
+                 . '</section>';
+        } elseif ($tipo === 'separador') {
+            $out .= '<section class="page" style="padding:64px 30px;text-align:center;background:var(--forest-deep)">'
+                 . '<div class="rv" style="font-family:var(--ff-script);font-size:40px;color:var(--gold-soft)">' . ($s['texto'] !== '' ? $esc($s['texto']) : '&#10047;') . '</div>'
+                 . '</section>';
+        }
+    }
+    return $out;
 }
 
 /** Normaliza a lista de perguntas de RSVP (label, tipo, opções). */
@@ -297,6 +371,9 @@ function normalizarDesign($data): array {
     foreach (textosPadrao() as $k => $def) {
         if (isset($tx[$k]) && is_string($tx[$k])) $out['textos'][$k] = $tx[$k];
     }
+
+    // Secções/páginas extra
+    if (isset($data['seccoes_extra'])) $out['seccoes_extra'] = normalizarSeccoesExtra($data['seccoes_extra']);
 
     // Perguntas de RSVP personalizadas
     if (isset($data['rsvp_perguntas'])) $out['rsvp_perguntas'] = normalizarPerguntas($data['rsvp_perguntas']);
@@ -588,8 +665,9 @@ function mapaTextos(array $design): array {
     foreach (imagensPadrao() as $k => $def) {
         $tokens['IMG_' . strtoupper($k)] = $esc(validarImagem($im[$k] ?? null) ?? $def);
     }
-    // Cronograma (HTML gerado)
+    // Cronograma e secções extra (HTML gerado)
     $tokens['CRONO_ITENS'] = cronogramaHtml($design);
+    $tokens['SECCOES_EXTRA'] = seccoesExtraHtml($design);
     return array_merge($tokens, tokensDerivados($design));
 }
 
