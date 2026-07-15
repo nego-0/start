@@ -18,8 +18,12 @@ const EVENTO = [
 ];
 
 // ---- Acesso -------------------------------------------------
-// Altere estas palavras-passe antes de publicar.
 // O administrador acede a tudo; o porteiro acede só à página de entrada.
+//
+// RECOMENDADO: guarde um *hash* (não a palavra-passe em texto simples).
+// Gere-o com:  php gerar-hash.php "a-sua-palavra-passe"
+// e cole aqui o resultado (começa por $2y$...). O sistema aceita ambos,
+// mas o texto simples é um recurso apenas para testes locais.
 const SENHA_ADMIN    = 'ALTERE_ESTA_SENHA_ADMIN';
 const SENHA_PORTEIRO = 'ALTERE_ESTA_SENHA_PORTEIRO';
 

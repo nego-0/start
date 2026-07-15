@@ -3,10 +3,16 @@ require_once __DIR__ . '/auth.php';
 $erro = '';
 $redir = $_GET['r'] ?? 'admin.php';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $papel = autenticar($_POST['senha'] ?? '');
-    if ($papel === 'admin')    { header('Location: ' . (str_contains($redir,'login')?'admin.php':$redir)); exit; }
-    if ($papel === 'porteiro') { header('Location: porteiro.php'); exit; }
-    $erro = 'Palavra-passe incorreta.';
+    exigirCsrf(); // [S1]
+    if (bloqueadoPorTentativas('login')) {           // [S5]
+        $erro = 'Demasiadas tentativas. Aguarde uns minutos e tente de novo.';
+    } else {
+        $papel = autenticar($_POST['senha'] ?? '');
+        if ($papel === 'admin')    { limparTentativas('login'); header('Location: ' . (str_contains($redir,'login')?'admin.php':$redir)); exit; }
+        if ($papel === 'porteiro') { limparTentativas('login'); header('Location: porteiro.php'); exit; }
+        registarTentativa('login');
+        $erro = 'Palavra-passe incorreta.';
+    }
 }
 ?>
 <!DOCTYPE html>
@@ -37,6 +43,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <div class="evento">Gestão de Convidados</div>
       <?php if ($erro): ?><div class="erro"><?= $erro ?></div><?php endif; ?>
       <form method="post">
+        <?= csrfCampo() ?>
         <div style="text-align:left; margin-bottom:1rem;">
           <label for="senha">Palavra-passe</label>
           <input type="password" id="senha" name="senha" autofocus required autocomplete="current-password">

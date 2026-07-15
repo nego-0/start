@@ -14,6 +14,7 @@ $flash = '';
 
 // ---- Guardar (Post/Redirect/Get) -----------------------------
 if (($_POST['acao'] ?? '') === 'guardar') {
+    exigirCsrf(); // [S1]
     $cfg = json_decode($_POST['design'] ?? '', true);
     if (is_array($cfg)) {
         guardarDesign($conn, $cfg, 'Convite');
@@ -69,6 +70,7 @@ $H = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<?= csrfScript() ?>
 <title>Editor de modelos · Convite</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
 <link href="assets/estilo.css" rel="stylesheet">
@@ -331,6 +333,7 @@ $H = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
 
 <!-- Formulário oculto: guardar -->
 <form id="saveForm" method="post" action="editor-modelos.php" style="display:none">
+  <?= csrfCampo() ?>
   <input type="hidden" name="acao" value="guardar">
   <input type="hidden" name="design" id="saveDesign">
 </form>

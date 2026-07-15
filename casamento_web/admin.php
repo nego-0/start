@@ -17,6 +17,7 @@ if (isset($_GET['gerir'])) {
 }
 // Ações destrutivas.
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    exigirCsrf(); // [S1]
     $acao = $_POST['acao'] ?? '';
     if ($acao === 'apagar_evento') {
         apagarEventos($conn, [(int)($_POST['evento_id'] ?? 0)]);
@@ -115,7 +116,7 @@ $H = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
       <span class="email"><?= $H($ct['email']) ?></span>
       <span class="sp"></span>
       <form class="inl" method="post" onsubmit="return confirm('Apagar a conta e TODOS os seus casamentos? Esta ação é irreversível.')">
-        <input type="hidden" name="acao" value="apagar_conta"><input type="hidden" name="conta_id" value="<?= (int)$cid ?>">
+        <?= csrfCampo() ?><input type="hidden" name="acao" value="apagar_conta"><input type="hidden" name="conta_id" value="<?= (int)$cid ?>">
         <button class="btn x" type="submit">Apagar conta</button>
       </form>
     </div>
@@ -132,7 +133,7 @@ $H = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
         <a class="btn" href="admin.php?gerir=<?= (int)$e['evento_id'] ?>">Gerir</a>
         <a class="btn" href="convite-digital.php?evento=<?= $H($e['slug']) ?>" target="_blank" style="background:#efe7d6;color:#5c4a2c">Ver</a>
         <form class="inl" method="post" onsubmit="return confirm('Apagar este casamento e todos os seus dados?')">
-          <input type="hidden" name="acao" value="apagar_evento"><input type="hidden" name="evento_id" value="<?= (int)$e['evento_id'] ?>">
+          <?= csrfCampo() ?><input type="hidden" name="acao" value="apagar_evento"><input type="hidden" name="evento_id" value="<?= (int)$e['evento_id'] ?>">
           <button class="btn x" type="submit">Apagar</button>
         </form>
       </div>

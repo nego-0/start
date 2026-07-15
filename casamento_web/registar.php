@@ -3,6 +3,7 @@
 require_once __DIR__ . '/conta.php';
 $flash = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    exigirCsrf(); // [S1]
     [$ok, $msg] = registarConta(
         $conn,
         $_POST['nome'] ?? '', $_POST['email'] ?? '', $_POST['senha'] ?? '',

@@ -14,6 +14,7 @@ $P = PREFIXO;
 // ---- API JSON (mesmo ficheiro) -------------------------------
 if (($_GET['api'] ?? '') === '1') {
     header('Content-Type: application/json; charset=utf-8');
+    exigirCsrf(true); // [S1] só bloqueia POST (gravações); leituras GET passam
     $acao = $_POST['acao'] ?? $_GET['acao'] ?? '';
     $resp = ['ok' => false];
 
@@ -110,6 +111,7 @@ $H = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
 ?>
 <!DOCTYPE html><html lang="pt"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<?= csrfScript() ?>
 <title>Plano de mesas · <?= $H($nomeEvento) ?></title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>

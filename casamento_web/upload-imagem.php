@@ -9,6 +9,7 @@
 require_once __DIR__ . '/conta.php';
 require_once __DIR__ . '/design.php';
 exigirEdicao($conn);
+exigirCsrf(true); // [S1]
 $eid = eventoId();
 
 header('Content-Type: application/json; charset=utf-8');

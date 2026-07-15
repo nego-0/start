@@ -148,7 +148,10 @@ if ($idx && $idx->num_rows > 0) {
 $temConta = (int)($conn->query("SELECT COUNT(*) FROM {$P}contas")->fetch_row()[0] ?? 0);
 if ($temConta === 0) {
     $nome  = (EVENTO['noiva'] ?? 'Isabel') . ' & ' . (EVENTO['noivo'] ?? 'Abednego');
-    $hash  = password_hash(SENHA_ADMIN, PASSWORD_DEFAULT);
+    // [S3] Conta-semente sem palavra-passe utilizável: só é gerida pelo
+    // super-administrador (login.php). Um hash de valor aleatório garante
+    // que password_verify() nunca confere via entrar.php.
+    $hash  = password_hash(bin2hex(random_bytes(32)), PASSWORD_DEFAULT);
     $st = $conn->prepare("INSERT INTO {$P}contas (id, nome, email, senha_hash) VALUES (1, ?, 'principal@local', ?)");
     $st->bind_param('ss', $nome, $hash); $st->execute();
     $noiva = EVENTO['noiva'] ?? 'Isabel'; $noivo = EVENTO['noivo'] ?? 'Abednego'; $di = EVENTO['data_iso'] ?? '2026-12-19';

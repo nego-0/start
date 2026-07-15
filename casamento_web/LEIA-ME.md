@@ -15,6 +15,8 @@ O sistema foi desenhado para **coexistir** com a sua lista atual: cria tabelas n
 | `entrar.php` / `registar.php` / `painel-casal.php` / `sair-conta.php` | Entrada, criação de conta, painel do casal e saída. |
 | `db.php` | Ligação, criação automática das tabelas e funções partilhadas. |
 | `auth.php` | Autenticação por sessão (administrador e porteiro). |
+| `seguranca.php` | **Camada de segurança**: sessão endurecida (HttpOnly/SameSite/Secure), proteção CSRF (token + verificação) e limite de tentativas de login. |
+| `gerar-hash.php` | Utilitário de linha de comandos para gerar o *hash* de uma palavra-passe para o `config.php`. |
 | `api.php` | Todos os pedidos JSON (gestão, RSVP público e porteiro) e exportação CSV. |
 | `login.php` / `logout.php` | Entrada e saída. |
 | `index.php` | Painel de administração (convites, convidados, mesas, importação, QR). |
@@ -67,7 +69,7 @@ O sistema tenta primeiro a ligação `local` (útil para testes em XAMPP/Wamp) e
 
 ## Antes de publicar — ajustes em `config.php`
 
-- **Palavras-passe:** altere `SENHA_ADMIN` e `SENHA_PORTEIRO`. São distintas: o administrador acede a tudo; o porteiro só acede à página de entrada.
+- **Palavras-passe:** altere `SENHA_ADMIN` e `SENHA_PORTEIRO`. São distintas: o administrador acede a tudo; o porteiro só acede à página de entrada. **Recomendado:** guarde um *hash* em vez do texto simples — gere-o com `php gerar-hash.php "a-sua-senha"` e cole o resultado (`$2y$…`). O sistema aceita ambos, mas o texto simples só deve servir para testes locais.
 - **Hora da cerimónia:** o campo `EVENTO['hora']` está como `16:00` — ajuste para a hora real.
 - **WhatsApp de contacto:** `EVENTO['whatsapp']` está com um número de exemplo — coloque o número real (formato internacional, só dígitos, ex.: `244923000000`).
 

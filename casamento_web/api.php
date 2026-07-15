@@ -126,6 +126,7 @@ if ($acao === 'rsvp_submit') {
 // ---- Porteiro (admin ou porteiro) --------------------------
 if (in_array($acao, ['porta_buscar','porta_checkin','porta_stats','porta_entradas'], true)) {
     exigirPorta();
+    exigirCsrf(true); // [S1] só bloqueia POST (ex.: porta_checkin); leituras GET passam
 
     if ($acao === 'porta_stats') {
         $s = estatisticas($conn);
@@ -219,6 +220,7 @@ if (in_array($acao, ['porta_buscar','porta_checkin','porta_stats','porta_entrada
 
 // ---- Admin --------------------------------------------------
 exigirAdmin();
+exigirCsrf(true); // [S1] só bloqueia POST (gravações); leituras GET passam
 
 if ($acao === 'convite_list') {
     $tipo=$_GET['tipo']??''; $lado=$_GET['lado']??''; $estado=$_GET['estado']??'';

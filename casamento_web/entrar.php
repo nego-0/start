@@ -3,9 +3,15 @@
 require_once __DIR__ . '/conta.php';
 $flash = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    [$ok, $msg] = autenticarConta($conn, $_POST['email'] ?? '', $_POST['senha'] ?? '');
-    if ($ok) { header('Location: painel-casal.php'); exit; }
-    $flash = $msg;
+    exigirCsrf(); // [S1]
+    if (bloqueadoPorTentativas('entrar')) {          // [S5]
+        $flash = 'Demasiadas tentativas. Aguarde uns minutos e tente de novo.';
+    } else {
+        [$ok, $msg] = autenticarConta($conn, $_POST['email'] ?? '', $_POST['senha'] ?? '');
+        if ($ok) { limparTentativas('entrar'); header('Location: painel-casal.php'); exit; }
+        registarTentativa('entrar');
+        $flash = $msg;
+    }
 }
 $H = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
 ?>
@@ -28,6 +34,7 @@ $H = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
   a{color:#8A6031}
 </style></head><body>
 <form class="cartao" method="post">
+  <?= csrfCampo() ?>
   <h1>Entrar</h1>
   <p class="sub">A sua plataforma de convites de casamento.</p>
   <?php if ($flash): ?><div class="flash"><?= $H($flash) ?></div><?php endif; ?>

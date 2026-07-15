@@ -265,6 +265,21 @@ function validarImagem($v): ?string {
     return null;
 }
 
+/**
+ * [S2] Sanitiza texto rico do casal para saída no convite público.
+ * Mantém entidades HTML (ex.: &rdquo;, &nbsp;) e um conjunto restrito de
+ * marcações de formatação (br, strong, b, em, i), removendo atributos
+ * (on*, style, href…) e qualquer outra marcação (script, iframe, img…).
+ */
+function textoRico($s): string {
+    $s = (string)($s ?? '');
+    $s = strip_tags($s, '<br><strong><b><em><i>');
+    // Despoja as marcações permitidas de quaisquer atributos.
+    $s = preg_replace('#<\s*(br|strong|b|em|i)\b[^>]*?>#i', '<$1>', $s);
+    $s = preg_replace('#<\s*/\s*(strong|b|em|i)\s*>#i', '</$1>', $s);
+    return $s;
+}
+
 /** Substitui o marcador %NOIVOS% (nos textos) pelos nomes do casal. */
 function substituirNomesNosTextos(array $d): array {
     $par = trim(($d['evento']['noiva'] ?? '') . ' e ' . ($d['evento']['noivo'] ?? ''), ' e');
@@ -629,36 +644,37 @@ function construirCssTema(array $design): string {
 function mapaTextos(array $design): array {
     $t = $design['textos'];
     $esc = fn($s) => htmlspecialchars($s, ENT_QUOTES, 'UTF-8');
+    $r   = fn($s) => textoRico($s); // [S2] texto do casal higienizado (só <br>/<strong>/<em>…)
     $tokens = [
-        // Textos ricos do casal (permitem <br> e entidades — conteúdo de administração)
-        'CAPA_DICA'     => $t['capa_dica'],
-        'HERO_KICKER'   => $t['hero_kicker'],
-        'HERO_SUB'      => $t['hero_sub'],
-        'CONV_EYEBROW'  => $t['conv_eyebrow'],
-        'CONV_LEAD'     => $t['conv_lead'],
-        'CONV_CLOSING'  => $t['conv_closing'],
-        'HIST_EYEBROW'  => $t['hist_eyebrow'],
-        'HIST_TITULO'   => $t['hist_titulo'],
-        'HIST_CITACAO'  => $t['hist_citacao'],
-        'HIST_AUTOR'    => $t['hist_autor'],
-        'HIST_CAP1_TITULO' => $t['hist_cap1_titulo'] ?? '',
-        'HIST_CAP1_TEXTO'  => $t['hist_cap1_texto'] ?? '',
-        'HIST_CAP2_TITULO' => $t['hist_cap2_titulo'] ?? '',
-        'HIST_CAP2_TEXTO'  => $t['hist_cap2_texto'] ?? '',
-        'HIST_CAP3_TITULO' => $t['hist_cap3_titulo'] ?? '',
-        'HIST_CAP3_TEXTO'  => $t['hist_cap3_texto'] ?? '',
-        'INTER_VERSO'   => $t['inter_verso'],
-        'INTER_AUTOR'   => $t['inter_autor'],
-        'INTER_FECHO'   => $t['inter_fecho'],
-        'VENUE_TITULO'  => $t['venue_titulo'],
-        'VENUE_LOCAL'   => $t['venue_local'],
+        // Textos ricos do casal (permitem <br> e entidades, sanitizados contra XSS)
+        'CAPA_DICA'     => $r($t['capa_dica']),
+        'HERO_KICKER'   => $r($t['hero_kicker']),
+        'HERO_SUB'      => $r($t['hero_sub']),
+        'CONV_EYEBROW'  => $r($t['conv_eyebrow']),
+        'CONV_LEAD'     => $r($t['conv_lead']),
+        'CONV_CLOSING'  => $r($t['conv_closing']),
+        'HIST_EYEBROW'  => $r($t['hist_eyebrow']),
+        'HIST_TITULO'   => $r($t['hist_titulo']),
+        'HIST_CITACAO'  => $r($t['hist_citacao']),
+        'HIST_AUTOR'    => $r($t['hist_autor']),
+        'HIST_CAP1_TITULO' => $r($t['hist_cap1_titulo'] ?? ''),
+        'HIST_CAP1_TEXTO'  => $r($t['hist_cap1_texto'] ?? ''),
+        'HIST_CAP2_TITULO' => $r($t['hist_cap2_titulo'] ?? ''),
+        'HIST_CAP2_TEXTO'  => $r($t['hist_cap2_texto'] ?? ''),
+        'HIST_CAP3_TITULO' => $r($t['hist_cap3_titulo'] ?? ''),
+        'HIST_CAP3_TEXTO'  => $r($t['hist_cap3_texto'] ?? ''),
+        'INTER_VERSO'   => $r($t['inter_verso']),
+        'INTER_AUTOR'   => $r($t['inter_autor']),
+        'INTER_FECHO'   => $r($t['inter_fecho']),
+        'VENUE_TITULO'  => $r($t['venue_titulo']),
+        'VENUE_LOCAL'   => $r($t['venue_local']),
         'VENUE_MAPA'    => $esc($t['venue_mapa']), // contexto de atributo href
-        'CRONO_TITULO'  => $t['crono_titulo'],
-        'RSVP_TITULO'   => $t['rsvp_titulo'],
-        'RSVP_SUB'      => $t['rsvp_sub'],
-        'RSVP_DEADLINE' => $t['rsvp_deadline'],
-        'FOOTER_NOTA'   => $t['footer_nota'],
-        'IMPRESSO_ABERTURA' => $t['impresso_abertura'] ?? 'Com alegria, convidam',
+        'CRONO_TITULO'  => $r($t['crono_titulo']),
+        'RSVP_TITULO'   => $r($t['rsvp_titulo']),
+        'RSVP_SUB'      => $r($t['rsvp_sub']),
+        'RSVP_DEADLINE' => $r($t['rsvp_deadline']),
+        'FOOTER_NOTA'   => $r($t['footer_nota']),
+        'IMPRESSO_ABERTURA' => $r($t['impresso_abertura'] ?? 'Com alegria, convidam'),
     ];
     // Imagens (contexto de atributo src)
     $im = $design['imagens'] ?? imagensPadrao();

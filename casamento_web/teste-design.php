@@ -77,5 +77,26 @@ ok(strpos($htmlSx, '{{SECCOES_EXTRA}}') === false, 'Token SECCOES_EXTRA resolvid
 $semSx = aplicarDesign($tpl, normalizarDesign([]), $extra);
 ok(strpos($semSx, '{{SECCOES_EXTRA}}') === false, 'Token SECCOES_EXTRA removido quando vazio');
 
+// --- 5) [S2] Sanitização de texto rico do casal (anti-XSS) ---
+$mal = normalizarDesign(['textos' => [
+    'hero_sub' => 'Amor <script>alert(1)</script> & sempre<br>juntos',
+    'conv_lead' => 'Olá <b onmouseover="x">todos</b> <img src=x onerror=alert(2)>',
+]]);
+$htmlMal = aplicarDesign($tpl, $mal, $extra);
+ok(strpos($htmlMal, '<script>alert(1)</script>') === false, 'S2: <script> removido do texto do casal');
+ok(strpos($htmlMal, 'onerror') === false, 'S2: atributo onerror removido');
+ok(strpos($htmlMal, 'onmouseover') === false, 'S2: atributo de evento removido de <b>');
+ok(strpos($htmlMal, 'sempre<br>juntos') !== false, 'S2: <br> permitido preservado');
+ok(strpos($htmlMal, '<b>todos</b>') !== false, 'S2: <b> permitido mas despido de atributos');
+ok(textoRico('a &amp; b &rdquo;') === 'a &amp; b &rdquo;', 'S2: entidades HTML preservadas intactas');
+
+// --- 6) [S6] Verificação de senha por hash ou texto simples ---
+require_once __DIR__ . '/auth.php';
+$h = password_hash('segredo', PASSWORD_DEFAULT);
+ok(senhaConfere('segredo', $h) === true, 'S6: password_verify contra hash');
+ok(senhaConfere('errado', $h) === false, 'S6: hash rejeita senha errada');
+ok(senhaConfere('legado', 'legado') === true, 'S6: recurso a texto simples confere');
+ok(senhaConfere('x', '') === false, 'S6: config vazia nunca confere');
+
 echo "\n" . ($falhas === 0 ? "TODOS OS TESTES PASSARAM \xE2\x9C\x85" : "FALHAS: $falhas") . "\n";
 exit($falhas === 0 ? 0 : 1);

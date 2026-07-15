@@ -35,16 +35,20 @@ verificações) e verificação end-to-end por navegador em cada funcionalidade.
 
 ## 2. O que pode ser corrigido
 
-### 2.1 Segurança — **prioritário antes de abrir ao público**
+### 2.1 Segurança — **CORRIGIDO** ✅ (camada `seguranca.php`)
 
-| # | Problema | Onde | Risco | Correção sugerida |
-|---|---|---|---|---|
-| S1 | **Sem proteção CSRF** em qualquer formulário/endpoint de escrita (registo, login, editores, APIs `?api=1`) | todos os `*.php` com POST | Ações forjadas em nome do utilizador autenticado | Token CSRF por sessão, validado em todos os POST |
-| S2 | **XSS armazenado** — os textos do convite são inseridos **sem sanitização** (para permitir `<br>`); um casal pode injetar `<script>` no seu convite, servido aos convidados | `design.php` (`mapaTextos`), `convite-base.html` | Execução de script no navegador dos convidados | Permitir apenas um subconjunto seguro (`<br>`, `<b>`, `<i>`) via *allow-list*; escapar o resto |
-| S3 | **Conta semeada com login** — o evento 1 é acessível pelo fluxo de casais com o email `principal@local` + a palavra-passe de admin | `db.php` (seed), `conta.php` | Acesso ao casamento real por quem saiba a senha de admin | Semear sem `senha_hash` utilizável (ou email não-loginável) e manter o admin só pelo `login.php` |
-| S4 | **Cookies de sessão sem hardening** (`HttpOnly`, `Secure`, `SameSite`) | falta em `auth.php`/`conta.php` | Roubo de sessão | `session_set_cookie_params(['httponly'=>true,'secure'=>true,'samesite'=>'Lax'])` |
-| S5 | **Sem limite de tentativas** de login (força bruta) | `entrar.php`, `login.php` | Adivinhação de senha | *Rate limiting* por IP/conta + atraso progressivo |
-| S6 | **Senha de admin em texto** no `config.php` (comparada com `hash_equals`) | `config.php`, `auth.php` | Exposição se o ficheiro vazar | Guardar apenas `password_hash`; mover segredos para variáveis de ambiente |
+Os seis pontos foram resolvidos. A base partilhada está em `seguranca.php`
+(sessão endurecida, CSRF, *rate limiting*) e a sanitização de texto em
+`design.php` (`textoRico()`). Cobertura em `teste-design.php`.
+
+| # | Problema | Estado | Como ficou |
+|---|---|---|---|
+| S1 | Sem proteção CSRF nos POST | ✅ | Token por sessão (`csrfToken`), campo nos formulários (`csrfCampo`) e injeção automática nos `fetch` de mutação (`csrfScript`); verificado com `exigirCsrf()` em login/registo/admin, no editor, no `upload-imagem.php` e nos endpoints `?api=1` e `api.php`. O RSVP público (por código) fica isento. |
+| S2 | XSS armazenado nos textos do convite | ✅ | `textoRico()` mantém entidades e só permite `<br><strong><b><em><i>` (sem atributos), removendo `<script>`, `on*`, etc. Aplicado a todos os tokens de texto do casal em `mapaTextos()`. |
+| S3 | Conta-semente com login | ✅ | O evento 1 (`principal@local`) passa a ter `senha_hash` de valor aleatório — não é acessível por `entrar.php`; só o super-admin o gere via `login.php`. |
+| S4 | Cookies de sessão sem *hardening* | ✅ | `iniciarSessaoSegura()`: `HttpOnly`, `SameSite=Lax`, `Secure` sob HTTPS, nome próprio, + cabeçalhos `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`; `session_regenerate_id` ao autenticar. |
+| S5 | Sem limite de tentativas de login | ✅ | *Rate limiting* por IP (ficheiro em `uploads/.seg`): 8 tentativas / 15 min em `entrar.php` e `login.php`, limpo ao autenticar. |
+| S6 | Senha de admin em texto simples | ✅ | `config.php` aceita agora um `password_hash` (`$2y$…`); `senhaConfere()` usa `password_verify`. Utilitário `gerar-hash.php` para o produzir. O texto simples fica como recurso só para testes locais. |
 
 ### 2.2 Correção / consistência
 

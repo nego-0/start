@@ -12,6 +12,7 @@ $P = PREFIXO;
 
 if (($_GET['api'] ?? '') === '1') {
     header('Content-Type: application/json; charset=utf-8');
+    exigirCsrf(true); // [S1] só bloqueia POST (check-in); leituras GET passam
     $acao = $_POST['acao'] ?? '';
     $resp = ['ok' => false];
 
@@ -90,6 +91,7 @@ $st0 = portaStats($conn, $eid);
 ?>
 <!DOCTYPE html><html lang="pt"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<?= csrfScript() ?>
 <title>Porta · <?= $H($nomeEvento) ?></title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
