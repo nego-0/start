@@ -157,3 +157,21 @@ function nomeEventoAtivo(mysqli $conn): string {
 function urlPainel(): string {
     return contaLogada() !== null ? 'painel-casal.php' : 'index.php';
 }
+
+/** Links de navegação entre secções do casal (menu consistente). */
+function navCasalLinks(string $ativa = ''): string {
+    $links = [
+        'painel'     => [urlPainel(),          'Painel'],
+        'design'     => ['editor-modelos.php', 'Design'],
+        'convidados' => ['convidados.php',     'Convidados'],
+        'mesas'      => ['mesas-plano.php',     'Mesas'],
+        'envios'     => ['envios.php',          'Envios'],
+        'impresso'   => ['convite-impresso.php','Impresso'],
+    ];
+    $out = '';
+    foreach ($links as $k => [$href, $lbl]) {
+        $on = $k === $ativa ? ' style="background:rgba(217,188,140,.28)" aria-current="page"' : '';
+        $out .= '<a href="' . htmlspecialchars($href, ENT_QUOTES) . '"' . $on . '>' . $lbl . '</a>';
+    }
+    return $out;
+}

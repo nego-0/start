@@ -74,8 +74,7 @@ $H = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
 <div class="topo">
   <h1>Convites por WhatsApp</h1><span class="badge"><?= $H($nomeEvento) ?></span>
   <span class="sp"></span>
-  <a href="convidados.php">Convidados</a>
-  <a href="<?= $H(urlPainel()) ?>">← Painel</a>
+  <?= navCasalLinks('envios') ?>
 </div>
 <div class="wrap">
   <div class="painel">

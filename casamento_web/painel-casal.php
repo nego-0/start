@@ -20,6 +20,28 @@ $eventos = eventosDaConta($conn, $contaId);
 $ativoId = eventoDaSessao();
 $ativo   = $ativoId ? carregarEvento($conn, $ativoId, $contaId) : null;
 $H = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
+
+// Progresso ("primeiros passos") do evento ativo.
+$passos = [];
+if ($ativo) {
+    $eid = (int)$ativoId; $P = PREFIXO;
+    $um = fn($sql) => (int)($conn->query($sql)->fetch_row()[0] ?? 0);
+    $temDesign = $um("SELECT COUNT(*) FROM {$P}designs WHERE evento_id=$eid") > 0;
+    $des = carregarDesignAtivo($conn, $eid);
+    $temFotos = false;
+    foreach (($des['imagens'] ?? []) as $u) { if (strpos((string)$u, 'uploads/') === 0) { $temFotos = true; break; } }
+    $nConv = $um("SELECT COUNT(*) FROM {$P}convites WHERE evento_id=$eid");
+    $nMesas = $um("SELECT COUNT(*) FROM {$P}mesas WHERE evento_id=$eid");
+    $nEnv = $um("SELECT COUNT(*) FROM {$P}convites WHERE evento_id=$eid AND enviado=1");
+    $passos = [
+        ['Escolher o modelo e as cores', $temDesign, 'editor-modelos.php'],
+        ['Carregar as vossas fotos',     $temFotos,  'editor-modelos.php'],
+        ['Adicionar os convidados',      $nConv > 0, 'convidados.php'],
+        ['Organizar as mesas',           $nMesas > 0,'mesas-plano.php'],
+        ['Enviar os convites',           $nEnv > 0,  'envios.php'],
+    ];
+}
+$feitos = array_reduce($passos, fn($c, $p) => $c + ($p[1] ? 1 : 0), 0);
 ?>
 <!DOCTYPE html><html lang="pt"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
@@ -47,10 +69,20 @@ $H = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
   .dois{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.6rem;align-items:end}
   .btn{border:none;border-radius:50px;padding:.6rem 1.1rem;font:inherit;font-weight:500;color:#fff;background:linear-gradient(135deg,#B4864A,#8A6031);cursor:pointer}
   @media(max-width:560px){.dois{grid-template-columns:1fr}}
+  .prog{font-size:.8rem;color:#8a8f88;font-family:'Jost',sans-serif;font-weight:400}
+  .barra-prog{height:7px;background:#efe7d6;border-radius:50px;overflow:hidden;margin:.2rem 0 .8rem}
+  .barra-prog span{display:block;height:100%;background:linear-gradient(90deg,#B4864A,#8A6031)}
+  .passos{display:flex;flex-direction:column;gap:.4rem}
+  .passo{display:flex;align-items:center;gap:.6rem;text-decoration:none;color:#26332b;border:1px solid #e6dfce;border-radius:10px;padding:.55rem .8rem;font-size:.9rem}
+  .passo:hover{border-color:#D9BC8C}
+  .passo .check{width:22px;height:22px;flex:none;border-radius:50%;border:1.5px solid #d8cdb2;display:flex;align-items:center;justify-content:center;font-size:.8rem;color:#fff}
+  .passo.ok{color:#5c6b5f}
+  .passo.ok .check{background:#1f7a3d;border-color:#1f7a3d}
 </style></head><body>
 <div class="topo">
   <h1>O meu painel</h1>
   <span class="sp"></span>
+  <?= navCasalLinks('painel') ?>
   <a href="sair-conta.php">Terminar sessão</a>
 </div>
 <div class="wrap">
@@ -66,6 +98,20 @@ $H = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
       <?php endforeach; ?>
     </div>
   </div>
+
+  <?php if ($ativo && $feitos < count($passos)): ?>
+  <div class="cartao">
+    <h2>Primeiros passos <span class="prog"><?= $feitos ?>/<?= count($passos) ?></span></h2>
+    <div class="barra-prog"><span style="width:<?= (int)round($feitos / max(1,count($passos)) * 100) ?>%"></span></div>
+    <div class="passos">
+      <?php foreach ($passos as [$rot, $ok, $href]): ?>
+        <a class="passo<?= $ok ? ' ok' : '' ?>" href="<?= $H($href) ?>">
+          <span class="check"><?= $ok ? '✓' : '' ?></span><?= $H($rot) ?>
+        </a>
+      <?php endforeach; ?>
+    </div>
+  </div>
+  <?php endif; ?>
 
   <?php if ($ativo): ?>
   <div class="cartao">

@@ -148,7 +148,7 @@ $H = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
 <div class="topo">
   <h1>Plano de mesas</h1><span class="badge"><?= $H($nomeEvento) ?></span>
   <span class="sp"></span>
-  <a href="<?= $H(urlPainel()) ?>">← Painel</a>
+  <?= navCasalLinks('mesas') ?>
 </div>
 <div class="area">
   <div class="painel">
