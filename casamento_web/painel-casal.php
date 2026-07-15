@@ -123,6 +123,7 @@ $feitos = array_reduce($passos, fn($c, $p) => $c + ($p[1] ? 1 : 0), 0);
       <a class="acao" href="convidados.php"><div class="t">Convidados &amp; RSVP</div><div class="s">Lista, confirmações e links de convite</div></a>
       <a class="acao" href="mesas-plano.php"><div class="t">Plano de mesas</div><div class="s">Sentar os convidados, arrastando</div></a>
       <a class="acao" href="envios.php"><div class="t">Enviar por WhatsApp</div><div class="s">Convites e lembretes personalizados</div></a>
+      <a class="acao" href="porta.php"><div class="t">Porta &amp; chegadas</div><div class="s">Check-in no dia, com contador ao vivo</div></a>
       <a class="acao" href="convite-digital.php?evento=<?= $H($ativo['slug']) ?>" target="_blank"><div class="t">Ver convite digital ↗</div><div class="s">Pré-visualização pública do desenho</div></a>
     </div>
   </div>

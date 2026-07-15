@@ -166,6 +166,7 @@ function navCasalLinks(string $ativa = ''): string {
         'convidados' => ['convidados.php',     'Convidados'],
         'mesas'      => ['mesas-plano.php',     'Mesas'],
         'envios'     => ['envios.php',          'Envios'],
+        'porta'      => ['porta.php',           'Porta'],
         'impresso'   => ['convite-impresso.php','Impresso'],
     ];
     $out = '';
