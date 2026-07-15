@@ -171,6 +171,7 @@ function eventoId(): int { return (int)($GLOBALS['EVENTO_ID'] ?? 1); }
 
 /** URL base do site (funciona em local e online, para links e QR). */
 function base_url(): string {
+    if (defined('BASE_URL_OVERRIDE') && BASE_URL_OVERRIDE !== '') return BASE_URL_OVERRIDE;
     $https  = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off');
     $scheme = $https ? 'https' : 'http';
     $host   = $_SERVER['HTTP_HOST'] ?? 'localhost';

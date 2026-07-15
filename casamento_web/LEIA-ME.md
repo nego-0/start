@@ -10,13 +10,15 @@ O sistema foi desenhado para **coexistir** com a sua lista atual: cria tabelas n
 
 | Ficheiro | Função |
 |---|---|
-| `config.php` | Configuração central: dados do evento, palavras-passe e ligação à base de dados. **É o único ficheiro que precisa de editar.** |
+| `config.php` | Configuração central. Lê **variáveis de ambiente** (ver `.env.example`) e só usa os valores por defeito quando elas não existem — os segredos ficam fora do repositório. |
+| `.env.example` | Modelo das variáveis de ambiente (senhas em hash, credenciais da BD, URL base, fuso). Copie e defina no alojamento. |
+| `verificar.php` | **Verificação de requisitos** (PHP, extensões, escrita em `uploads/`, senhas, ligação à BD): `php verificar.php` ou como admin na Web. Não imprime segredos. |
+| `gerar-hash.php` | Utilitário de linha de comandos para gerar o *hash* de uma palavra-passe. |
 | `conta.php` | **Contas de casais e eventos** (Fase 0, multi-inquilino): registo/login por email, evento ativo e isolamento de dados. |
 | `entrar.php` / `registar.php` / `painel-casal.php` / `sair-conta.php` | Entrada, criação de conta, painel do casal e saída. |
 | `db.php` | Ligação, criação automática das tabelas e funções partilhadas. |
 | `auth.php` | Autenticação por sessão (administrador e porteiro). |
 | `seguranca.php` | **Camada de segurança**: sessão endurecida (HttpOnly/SameSite/Secure), proteção CSRF (token + verificação) e limite de tentativas de login. |
-| `gerar-hash.php` | Utilitário de linha de comandos para gerar o *hash* de uma palavra-passe para o `config.php`. |
 | `api.php` | Todos os pedidos JSON (gestão, RSVP público e porteiro) e exportação CSV. |
 | `login.php` / `logout.php` | Entrada e saída. |
 | `index.php` | Painel de administração (convites, convidados, mesas, importação, QR). |
@@ -58,21 +60,24 @@ Não existe um "evento principal" — é uma plataforma multi-inquilino.
 
 ---
 
-## Instalação no InfinityFree (ou outro alojamento)
+## Instalação
 
-1. Carregue todos os ficheiros (incluindo a pasta `assets/`) para a pasta pública do site (`htdocs`).
-2. Em `config.php`, confirme os dados de ligação em `DB_CONFIGS['online']`. Já vêm preenchidos com a sua base atual (`if0_40371922_wed`), por isso o sistema liga-se e cria as tabelas `cw_` automaticamente na primeira visita.
-3. Abra o site no navegador. As tabelas são criadas sozinhas.
+1. Carregue todos os ficheiros (incluindo a pasta `assets/`) para a pasta pública do site.
+2. Defina as **variáveis de ambiente** (ver `.env.example`): senhas em hash, credenciais da base de dados, URL base e fuso. Em desenvolvimento local pode simplesmente aceitar os valores por defeito do `config.php`.
+3. Abra o site no navegador — as tabelas `cw_` são criadas automaticamente na primeira visita.
+4. Corra `php verificar.php` (ou aceda como admin) para confirmar requisitos, escrita em `uploads/`, senhas e ligação à BD.
 
-O sistema tenta primeiro a ligação `local` (útil para testes em XAMPP/Wamp) e, se falhar, usa a `online`.
+O guia completo (alojamento partilhado e servidor próprio, HTTPS, backups) está em **`docs/IMPLANTACAO.md`**.
+
+Por defeito o sistema tenta a ligação `local` e depois a `online`; defina `CW_DB_MODE=online` em produção para forçar a de produção.
 
 ---
 
-## Antes de publicar — ajustes em `config.php`
+## Antes de publicar
 
-- **Palavras-passe:** altere `SENHA_ADMIN` e `SENHA_PORTEIRO`. São distintas: o administrador acede a tudo; o porteiro só acede à página de entrada. **Recomendado:** guarde um *hash* em vez do texto simples — gere-o com `php gerar-hash.php "a-sua-senha"` e cole o resultado (`$2y$…`). O sistema aceita ambos, mas o texto simples só deve servir para testes locais.
-- **Hora da cerimónia:** o campo `EVENTO['hora']` está como `16:00` — ajuste para a hora real.
-- **WhatsApp de contacto:** `EVENTO['whatsapp']` está com um número de exemplo — coloque o número real (formato internacional, só dígitos, ex.: `244923000000`).
+- **Palavras-passe:** defina `CW_SENHA_ADMIN` e `CW_SENHA_PORTEIRO`. São distintas: o administrador acede a tudo; o porteiro só acede à página de entrada. **Recomendado:** guarde um *hash* — gere-o com `php gerar-hash.php "a-sua-senha"` e coloque o resultado (`$2y$…`) na variável. O sistema aceita hash ou texto simples, mas o texto simples só deve servir para testes locais.
+- **URL base:** defina `CW_BASE_URL` (ex.: `https://convites.exemplo.pt`) para que os links e os QR fiquem corretos, sobretudo atrás de proxy/CDN.
+- **Fuso, hora e WhatsApp:** ajuste `CW_TZ`, `CW_HORA` e `CW_WHATSAPP` (número real, formato internacional, só dígitos) conforme o evento.
 
 ---
 
