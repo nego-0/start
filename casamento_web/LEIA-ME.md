@@ -46,10 +46,12 @@ O sistema foi desenhado para **coexistir** com a sua lista atual: cria tabelas n
 - **`cw_designs`** — o design do convite (por evento), em JSON (paleta, tipografia, secções e textos). Criada automaticamente.
 - **`cw_contas`** / **`cw_eventos`** — contas de casais e os seus eventos (Fase 0). As tabelas existentes ganham `evento_id`; os dados atuais ficam no **evento 1**.
 
-### Dois modos de acesso (Fase 0)
+### Dois modos de acesso (plataforma)
 
-- **Admin legado** (palavra-passe em `config.php`) — gere o **evento 1** (o casamento atual) com todas as funcionalidades de convidados/RSVP/porteiro. Inalterado.
-- **Contas de casais** (`registar.php` / `entrar.php`) — cada casal cria a sua conta e um ou mais eventos, com **design isolado** (modelo, cores, textos, convite impresso e editor de tela) por evento. Partilha pública do desenho em `convite-digital.php?evento=SLUG` e `convite-impresso.php?evento=SLUG`.
+Não existe um "evento principal" — é uma plataforma multi-inquilino.
+
+- **Contas de casais** (`registar.php` / `entrar.php`) — cada casal cria a sua conta e um ou mais eventos, geridos de forma **isolada** (design, convidados, RSVP, mesas, envios, porta, impresso). Partilha pública em `convite-digital.php?evento=SLUG` e `convite-impresso.php?evento=SLUG`.
+- **Super-administrador** (`login.php`, palavra-passe em `config.php` → `admin.php`) — vê e gere **todas as contas e casamentos**: entrar num evento para o gerir, apagar eventos ou contas.
 
 ---
 

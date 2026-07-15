@@ -1,10 +1,10 @@
 <?php
 require_once __DIR__ . '/auth.php';
 $erro = '';
-$redir = $_GET['r'] ?? 'index.php';
+$redir = $_GET['r'] ?? 'admin.php';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $papel = autenticar($_POST['senha'] ?? '');
-    if ($papel === 'admin')    { header('Location: ' . (str_contains($redir,'login')?'index.php':$redir)); exit; }
+    if ($papel === 'admin')    { header('Location: ' . (str_contains($redir,'login')?'admin.php':$redir)); exit; }
     if ($papel === 'porteiro') { header('Location: porteiro.php'); exit; }
     $erro = 'Palavra-passe incorreta.';
 }

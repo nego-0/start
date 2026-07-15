@@ -143,7 +143,11 @@ function exigirEdicao(mysqli $conn): void {
         $GLOBALS['EVENTO_ID'] = eventoDaSessao();
         return;
     }
-    if (ehAdmin()) { $GLOBALS['EVENTO_ID'] = 1; return; }
+    if (ehAdmin()) {
+        $ae = $_SESSION['admin_evento'] ?? null;
+        if ($ae) { $GLOBALS['EVENTO_ID'] = (int)$ae; return; }
+        header('Location: admin.php'); exit;   // o super-admin escolhe primeiro um evento
+    }
     header('Location: entrar.php'); exit;
 }
 
@@ -155,7 +159,9 @@ function nomeEventoAtivo(mysqli $conn): string {
 
 /** Painel a que voltar consoante o tipo de sessão. */
 function urlPainel(): string {
-    return contaLogada() !== null ? 'painel-casal.php' : 'index.php';
+    if (contaLogada() !== null) return 'painel-casal.php';
+    if (ehAdmin()) return 'admin.php';
+    return 'entrar.php';
 }
 
 /** Links de navegação entre secções do casal (menu consistente). */
