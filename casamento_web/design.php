@@ -55,6 +55,24 @@ function textosPadrao(): array {
     ];
 }
 
+/** Imagens padrão do convite (as do casamento Isabel & Abednego). */
+function imagensPadrao(): array {
+    return [
+        'hero'       => 'assets/convite/hero.jpg',
+        'historia'   => 'assets/convite/historia.jpg',
+        'interludio' => 'assets/convite/interludio.jpg',
+        'acesso'     => 'assets/convite/acesso.jpg',
+    ];
+}
+function rotulosImagens(): array {
+    return [
+        'hero'       => 'Capa (foto principal)',
+        'historia'   => 'A nossa história',
+        'interludio' => 'Interlúdio (fundo do verso)',
+        'acesso'     => 'Passe de entrada',
+    ];
+}
+
 /** Secções que podem ser mostradas/ocultadas, e o seu rótulo. */
 function seccoesPadrao(): array {
     return [
@@ -103,8 +121,20 @@ function designPadraoBruto(): array {
         'paleta'     => $m['paleta'],
         'tipografia' => $m['tipografia'],
         'seccoes'    => seccoesPadrao(),
+        'imagens'    => imagensPadrao(),
         'textos'     => textosPadrao(),
     ];
+}
+
+/** Caminho de imagem seguro (só assets/convite/ ou uploads/), ou null. */
+function validarImagem($v): ?string {
+    if (!is_string($v)) return null;
+    $v = trim($v);
+    if (preg_match('#^(assets/convite/|uploads/)[A-Za-z0-9_./-]+\.(jpe?g|png|webp)$#i', $v)
+        && strpos($v, '..') === false) {
+        return $v;
+    }
+    return null;
 }
 
 /** Substitui o marcador %NOIVOS% (nos textos) pelos nomes do casal. */
@@ -183,6 +213,13 @@ function normalizarDesign($data): array {
     $sc = is_array($data['seccoes'] ?? null) ? $data['seccoes'] : [];
     foreach (seccoesPadrao() as $k => $def) {
         if (array_key_exists($k, $sc)) $out['seccoes'][$k] = (bool)$sc[$k];
+    }
+
+    // Imagens (só caminhos seguros; mantém o padrão quando inválido)
+    $im = is_array($data['imagens'] ?? null) ? $data['imagens'] : [];
+    foreach (imagensPadrao() as $k => $def) {
+        $v = validarImagem($im[$k] ?? null);
+        if ($v !== null) $out['imagens'][$k] = $v;
     }
 
     // Textos (mantém o padrão quando ausente)
@@ -467,6 +504,11 @@ function mapaTextos(array $design): array {
         'FOOTER_NOTA'   => $t['footer_nota'],
         'IMPRESSO_ABERTURA' => $t['impresso_abertura'] ?? 'Com alegria, convidam',
     ];
+    // Imagens (contexto de atributo src)
+    $im = $design['imagens'] ?? imagensPadrao();
+    foreach (imagensPadrao() as $k => $def) {
+        $tokens['IMG_' . strtoupper($k)] = $esc(validarImagem($im[$k] ?? null) ?? $def);
+    }
     return array_merge($tokens, tokensDerivados($design));
 }
 

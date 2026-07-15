@@ -31,6 +31,7 @@ O sistema foi desenhado para **coexistir** com a sua lista atual: cria tabelas n
 | `assets/vendor/` | Bibliotecas locais: `fabric.min.js` (editor de tela) e `jspdf.umd.min.js` (exportação PDF). |
 | `modelos.php` | Galeria de modelos (predefinições de paleta e tipografia) e registo de tipos de letra. |
 | `design.php` | Camada de personalização: esquema `cw_designs`, design padrão e o construtor de tema (funções puras). |
+| `upload-imagem.php` | Upload das **fotos por evento** (hero/história/interlúdio/acesso): validação, redimensionamento (GD) e gravação em `uploads/eventos/{id}/`. |
 | `assets/estilo.css` | Estilo visual, alinhado com o convite (verde-floresta, dourado e marfim). |
 | `assets/convite-base.html` | Modelo do convite digital, com marcadores (`{{...}}`) para cores, tipografia e textos. |
 
@@ -100,6 +101,7 @@ O sistema tenta primeiro a ligação `local` (útil para testes em XAMPP/Wamp) e
 - **Galeria de modelos** — pontos de partida (Esmeralda & Ouro, Borgonha & Rosé, Azul-Noite & Champanhe, Terracota & Sálvia) que definem paleta e tipografia.
 - **Paleta** — 11 cores que se propagam por todo o convite (incluindo o código QR).
 - **Tipografia** — três papéis (títulos, corpo e manuscrita). As fontes marcadas *(web)* precisam de internet; o modelo Esmeralda usa fontes locais e mantém o convite totalmente offline.
+- **Fotos** — carregue as quatro fotografias do convite (capa, história, interlúdio, passe). São redimensionadas e guardadas por evento em `uploads/eventos/{id}/`; ficam também embutidas na descarga offline.
 - **Secções** — ligue/desligue a história, o interlúdio, a contagem decrescente, o cronograma, o manual, as pétalas e a música.
 - **Textos** — edite as palavras do convite (aceita `<br>` para quebrar linhas).
 - **Data e casal** — os nomes e a data alimentam automaticamente o título, a contagem decrescente, o dia da semana e o botão de calendário.

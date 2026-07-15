@@ -85,6 +85,14 @@ O **mesmo desenho gera o convite físico**, por duas vias:
 Falta: conversão **CMYK** (passo de pré-impressão da gráfica) e edição de imagem
 (recorte/filtros).
 
+### Fotos por evento ✅
+
+Cada casal carrega as suas fotografias (capa, história, interlúdio, passe) no
+editor de modelos — deixaram de ser as fotos da Isabel & Abednego. As imagens
+são validadas, redimensionadas (GD) e guardadas por evento em
+`uploads/eventos/{id}/`, e ficam embutidas na descarga offline do convite.
+Ver `upload-imagem.php` e a camada `imagens` em `design.php`.
+
 ### `prototipos/` — protótipos de interface
 - `editor-convites.html` — **protótipo do Atelier de Convites** (editor visual),
   para explorar a experiência da Fase 2.

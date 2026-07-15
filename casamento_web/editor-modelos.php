@@ -114,6 +114,18 @@ $H = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
   .em-preview iframe{ width:100%; height:calc(100% - 34px); border:0; background:#16261E; }
   .textos-grade{ display:grid; grid-template-columns:1fr 1fr; gap:.7rem .9rem; }
   @media (max-width:620px){ .textos-grade{ grid-template-columns:1fr; } }
+  .fotos{ display:grid; grid-template-columns:1fr 1fr; gap:.7rem; }
+  @media (max-width:620px){ .fotos{ grid-template-columns:1fr; } }
+  .foto{ display:flex; gap:.6rem; align-items:center; border:1px solid var(--e-line); border-radius:12px; padding:.5rem; }
+  .foto .thumb{ width:64px; height:64px; border-radius:9px; overflow:hidden; background:#efe9db; flex:none; }
+  .foto .thumb img{ width:100%; height:100%; object-fit:cover; }
+  .foto-info{ display:flex; flex-direction:column; gap:.2rem; min-width:0; }
+  .foto-info label{ font-size:.74rem; color:#5c6b5f; }
+  .upl{ cursor:pointer; }
+  .upl-btn{ display:inline-block; font-size:.78rem; color:#5c4a2c; background:#efe7d6; border:1px solid var(--e-line); border-radius:50px; padding:.3rem .7rem; }
+  .upl-btn:hover{ background:#e6d9bf; }
+  .foto-estado{ font-size:.72rem; color:#8a8f88; }
+  .foto-estado.ok{ color:#1f7a3d; } .foto-estado.erro{ color:#a5473f; }
 </style>
 </head>
 <body>
@@ -212,6 +224,26 @@ $H = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
     </div>
 
     <div class="card">
+      <h2>Fotos</h2>
+      <p class="hint">Carregue as fotografias do vosso casamento (JPG/PNG, até 8&nbsp;MB). São redimensionadas automaticamente.</p>
+      <div class="fotos">
+        <?php foreach (rotulosImagens() as $ik => $rot): ?>
+          <div class="foto" data-slot="<?= $H($ik) ?>">
+            <div class="thumb"><img id="thumb-<?= $H($ik) ?>" src="<?= $H($design['imagens'][$ik] ?? '') ?>" alt=""></div>
+            <div class="foto-info">
+              <label><?= $H($rot) ?></label>
+              <label class="upl">
+                <input type="file" accept="image/jpeg,image/png,image/webp" onchange="enviarFoto('<?= $H($ik) ?>', this)" hidden>
+                <span class="upl-btn">Escolher foto…</span>
+              </label>
+              <span class="foto-estado" id="est-<?= $H($ik) ?>"></span>
+            </div>
+          </div>
+        <?php endforeach; ?>
+      </div>
+    </div>
+
+    <div class="card">
       <h2>Textos</h2>
       <p class="hint">Personalize as palavras do convite. Pode usar &lt;br&gt; para quebrar linhas.</p>
       <div class="textos-grade">
@@ -256,10 +288,28 @@ $H = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
   var MODELOS = <?= json_encode($modelos, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
   var CHAVES_PAL = <?= json_encode(chavesPaleta()) ?>;
   var modeloAtual = <?= json_encode($design['modelo']) ?>;
+  var IMAGENS = <?= json_encode($design['imagens'] ?? imagensPadrao(), JSON_UNESCAPED_SLASHES) ?>;
+
+  // Envia uma foto para o servidor e atualiza o design/pré-visualização.
+  function enviarFoto(slot, inp){
+    var f = inp.files && inp.files[0]; if(!f) return;
+    var est = document.getElementById('est-'+slot);
+    est.className='foto-estado'; est.textContent='A enviar…';
+    var fd = new FormData(); fd.append('slot', slot); fd.append('imagem', f);
+    fetch('upload-imagem.php', { method:'POST', body:fd })
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        if(d.ok){ IMAGENS[slot]=d.url; document.getElementById('thumb-'+slot).src=d.url;
+          est.className='foto-estado ok'; est.textContent='✓ carregada'; atualizarPreview(); }
+        else { est.className='foto-estado erro'; est.textContent=d.erro||'Falhou.'; }
+      })
+      .catch(function(){ est.className='foto-estado erro'; est.textContent='Erro de rede.'; });
+    inp.value='';
+  }
 
   // Recolhe o design completo a partir dos controlos.
   function coletar(){
-    var d = { modelo: modeloAtual, evento:{}, paleta:{}, tipografia:{}, seccoes:{}, textos:{} };
+    var d = { modelo: modeloAtual, evento:{}, paleta:{}, tipografia:{}, seccoes:{}, textos:{}, imagens: Object.assign({}, IMAGENS) };
     var mapa = { ev:'evento', pal:'paleta', tip:'tipografia', sec:'seccoes', tex:'textos' };
     document.querySelectorAll('[data-g][data-k]').forEach(function(el){
       var grupo = mapa[el.getAttribute('data-g')];
