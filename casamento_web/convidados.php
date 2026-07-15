@@ -58,9 +58,48 @@ if (($_GET['api'] ?? '') === '1') {
                 $resp = ['ok' => true];
             }
             break;
+
+        case 'importar':
+            $linhas = parseImportacao((string)($_POST['csv'] ?? ''));
+            $n = 0;
+            $st = $conn->prepare("INSERT INTO {$P}convites (codigo, nome_exibicao, lugares, tipo, telefone, evento_id) VALUES (?,?,?, 'ambos', ?, ?)");
+            foreach ($linhas as $l) {
+                $cod = gerarCodigo($conn);
+                $st->bind_param('ssisi', $cod, $l['nome'], $l['lugares'], $l['telefone'], $eid);
+                if ($st->execute()) $n++;
+            }
+            $resp = ['ok' => true, 'n' => $n];
+            break;
     }
     echo json_encode($resp, JSON_UNESCAPED_UNICODE);
     exit;
+}
+
+/** Analisa texto CSV/colado em linhas de convite (tolerante a formatos). */
+function parseImportacao(string $texto): array {
+    $out = [];
+    $linhas = preg_split('/\r\n|\r|\n/', trim($texto));
+    foreach ($linhas as $i => $l) {
+        if (trim($l) === '') continue;
+        $delim = (substr_count($l, ';') > substr_count($l, ',')) ? ';' : ((strpos($l, "\t") !== false && strpos($l, ',') === false) ? "\t" : ',');
+        $cols = array_map('trim', str_getcsv($l, $delim));
+        $nome = $cols[0] ?? '';
+        if ($nome === '') continue;
+        // Ignora linha de cabeçalho.
+        if ($i === 0 && preg_match('/^(nome|convidado|name|guest)$/i', $nome)) continue;
+        $c1 = $cols[1] ?? ''; $c2 = $cols[2] ?? '';
+        $lug = 1; $tel = '';
+        $d1 = preg_replace('/\D/', '', $c1);
+        if ($c1 !== '' && strlen($d1) >= 6) {         // muitos dígitos -> telefone
+            $tel = $c1;
+        } elseif ($c1 !== '' && ctype_digit($d1) && $d1 !== '') {
+            $lug = max(1, min(99, (int)$d1)); $tel = $c2;
+        } else {
+            $tel = $c2;
+        }
+        $out[] = ['nome' => mb_substr($nome, 0, 255), 'lugares' => $lug, 'telefone' => ($tel !== '' ? mb_substr($tel, 0, 50) : null)];
+    }
+    return $out;
 }
 
 $nomeEvento = nomeEventoAtivo($conn);
@@ -101,6 +140,8 @@ $s = estatisticas($conn);
   .mini{border:1px solid #e6dfce;background:#fbf8f1;border-radius:7px;padding:.28rem .5rem;font-size:.78rem;cursor:pointer;text-decoration:none;color:#5c4a2c}
   .mini:hover{border-color:#D9BC8C}
   .vazio{color:#9aa093;font-style:italic;padding:1rem 0}
+  textarea{width:100%;border:1px solid #e6dfce;border-radius:8px;padding:.5rem .6rem;font:inherit;font-size:.86rem;resize:vertical}
+  #importEstado.ok{color:#1f7a3d} #importEstado.erro{color:#a5473f}
 </style></head><body>
 <div class="topo">
   <h1>Convidados</h1><span class="badge"><?= $H($nomeEvento) ?></span>
@@ -129,6 +170,21 @@ $s = estatisticas($conn);
       <div class="acoes"><button class="btn" type="submit" id="btnGuardar">Adicionar</button>
         <button class="btn sec" type="button" onclick="limparForm()" id="btnCancel" style="display:none">Cancelar</button></div>
     </form>
+  </div>
+
+  <div class="painel">
+    <h2>Importar lista <button type="button" class="mini" onclick="toggleImport()" style="font-size:.76rem">abrir / fechar</button></h2>
+    <div id="importBox" style="display:none">
+      <p class="hint" style="font-size:.82rem;color:#8a8f88;margin:.2rem 0 .5rem">
+        Uma linha por convite: <b>Nome, Lugares, Telefone</b> (lugares e telefone opcionais). Cole de uma folha de cálculo ou escolha um ficheiro CSV.</p>
+      <textarea id="csvTexto" rows="6" placeholder="Família Silva, 4, 244923000000&#10;Ana e Bruno, 2&#10;João Costa"></textarea>
+      <div class="acoes" style="margin-top:.5rem">
+        <label class="btn sec" style="cursor:pointer">Escolher CSV…
+          <input type="file" accept=".csv,text/csv,text/plain" hidden onchange="lerCsv(this)"></label>
+        <button class="btn" type="button" onclick="importar()">Importar</button>
+        <span id="importEstado" class="hint" style="font-size:.82rem"></span>
+      </div>
+    </div>
   </div>
 
   <div class="painel">
@@ -204,6 +260,17 @@ $s = estatisticas($conn);
     document.getElementById('btnCancel').style.display='none';
   }
   function apagar(id,nome){ if(confirm('Apagar o convite "'+nome+'"?')) post('delete',{id:id}).then(function(){ carregar(); atualizarKpis(); }); }
+  function toggleImport(){ var b=document.getElementById('importBox'); b.style.display = b.style.display==='none'?'block':'none'; }
+  function lerCsv(inp){ var f=inp.files&&inp.files[0]; if(!f) return; var r=new FileReader(); r.onload=function(e){ document.getElementById('csvTexto').value=e.target.result; }; r.readAsText(f); inp.value=''; }
+  function importar(){
+    var txt=document.getElementById('csvTexto').value.trim(); var est=document.getElementById('importEstado');
+    if(!txt){ est.className='hint erro'; est.textContent='Cole a lista ou escolha um ficheiro.'; return; }
+    est.className='hint'; est.textContent='A importar…';
+    post('importar',{csv:txt}).then(function(d){
+      est.className='hint ok'; est.textContent=(d.n||0)+' convite(s) importado(s).';
+      document.getElementById('csvTexto').value=''; carregar();
+    }).catch(function(){ est.className='hint erro'; est.textContent='Falhou.'; });
+  }
   function copiar(url){ navigator.clipboard.writeText(url).then(function(){ /* copiado */ }); alert('Link de RSVP copiado:\n'+url); }
   function atualizarKpis(){ /* recarrega a página para números exatos, de forma simples */ }
   carregar();
