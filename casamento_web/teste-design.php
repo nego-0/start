@@ -98,5 +98,17 @@ ok(senhaConfere('errado', $h) === false, 'S6: hash rejeita senha errada');
 ok(senhaConfere('legado', 'legado') === true, 'S6: recurso a texto simples confere');
 ok(senhaConfere('x', '') === false, 'S6: config vazia nunca confere');
 
+// --- 7) Música de fundo (áudio por evento) ---
+ok(validarAudio('uploads/eventos/9/musica-x.mp3') === 'uploads/eventos/9/musica-x.mp3', 'Áudio: caminho válido aceite');
+ok(validarAudio('uploads/../etc/passwd.mp3') === '', 'Áudio: travessia de diretório rejeitada');
+ok(validarAudio('assets/convite/musica.exe') === '', 'Áudio: extensão não-áudio rejeitada');
+ok(validarAudio('') === '', 'Áudio: vazio permanece vazio');
+$comAudio = normalizarDesign(['audio' => 'uploads/eventos/9/cancao.m4a']);
+$htmlAudio = aplicarDesign($tpl, $comAudio, $extra);
+ok(strpos($htmlAudio, 'src="uploads/eventos/9/cancao.m4a"') !== false, 'Áudio: token AUDIO_SRC aplicado');
+$semAudio = aplicarDesign($tpl, normalizarDesign([]), $extra);
+ok(strpos($semAudio, '{{AUDIO_SRC}}') === false, 'Áudio: token resolvido mesmo sem música');
+ok(strpos($semAudio, 'id="bgAudio" loop preload="auto" src=""') !== false, 'Áudio: src vazio quando não há música');
+
 echo "\n" . ($falhas === 0 ? "TODOS OS TESTES PASSARAM \xE2\x9C\x85" : "FALHAS: $falhas") . "\n";
 exit($falhas === 0 ? 0 : 1);

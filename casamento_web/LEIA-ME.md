@@ -35,6 +35,7 @@ O sistema foi desenhado para **coexistir** com a sua lista atual: cria tabelas n
 | `modelos.php` | Galeria de modelos (predefinições de paleta e tipografia) e registo de tipos de letra. |
 | `design.php` | Camada de personalização: esquema `cw_designs`, design padrão e o construtor de tema (funções puras). |
 | `upload-imagem.php` | Upload das **fotos por evento** (hero/história/interlúdio/acesso): validação, redimensionamento (GD) e gravação em `uploads/eventos/{id}/`. |
+| `upload-audio.php` | Upload (e remoção) da **música de fundo por evento**: validação de formato/tamanho e gravação em `uploads/eventos/{id}/`. |
 | `assets/estilo.css` | Estilo visual, alinhado com o convite (verde-floresta, dourado e marfim). |
 | `assets/convite-base.html` | Modelo do convite digital, com marcadores (`{{...}}`) para cores, tipografia e textos. |
 
@@ -107,6 +108,7 @@ O sistema tenta primeiro a ligação `local` (útil para testes em XAMPP/Wamp) e
 - **Paleta** — 11 cores que se propagam por todo o convite (incluindo o código QR).
 - **Tipografia** — três papéis (títulos, corpo e manuscrita). As fontes marcadas *(web)* precisam de internet; o modelo Esmeralda usa fontes locais e mantém o convite totalmente offline.
 - **Fotos** — carregue as quatro fotografias do convite (capa, história, interlúdio, passe). São redimensionadas e guardadas por evento em `uploads/eventos/{id}/`; ficam também embutidas na descarga offline.
+- **Música** — carregue a canção que toca ao abrir o convite (MP3/M4A/AAC/OGG/WAV, até 12&nbsp;MB). Guardada por evento em `uploads/eventos/{id}/`, embutida na descarga offline. Sem canção, o botão de música não aparece; o convidado pode sempre ligá-la ou desligá-la.
 - **História & Cronograma** — os três capítulos da "nossa história" são editáveis, e o cronograma do dia é uma lista de momentos (hora, período, título, descrição) a que se acrescentam ou removem linhas.
 - **Perguntas de RSVP** — perguntas extra (texto livre ou opções) que o convidado responde ao confirmar (ex.: menu, alergias, música). As respostas ficam guardadas por convite e aparecem na lista de convidados.
 - **Secções** — ligue/desligue a história, o interlúdio, a contagem decrescente, o cronograma, o manual, as pétalas e a música.

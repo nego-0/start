@@ -156,6 +156,7 @@ function designPadraoBruto(): array {
         'tipografia' => $m['tipografia'],
         'seccoes'    => seccoesPadrao(),
         'imagens'    => imagensPadrao(),
+        'audio'      => '',   // música de fundo do casal (vazio = sem música)
         'cronograma' => cronogramaPadrao(),
         'seccoes_extra' => [],
         'rsvp_perguntas' => [],
@@ -280,6 +281,18 @@ function textoRico($s): string {
     return $s;
 }
 
+/** Caminho de áudio seguro (uploads/), ou '' (sem música). */
+function validarAudio($v): string {
+    if (!is_string($v)) return '';
+    $v = trim($v);
+    if ($v === '') return '';
+    if (preg_match('#^uploads/[A-Za-z0-9_./-]+\.(mp3|m4a|aac|ogg|wav)$#i', $v)
+        && strpos($v, '..') === false) {
+        return $v;
+    }
+    return '';
+}
+
 /** Substitui o marcador %NOIVOS% (nos textos) pelos nomes do casal. */
 function substituirNomesNosTextos(array $d): array {
     $par = trim(($d['evento']['noiva'] ?? '') . ' e ' . ($d['evento']['noivo'] ?? ''), ' e');
@@ -364,6 +377,9 @@ function normalizarDesign($data): array {
         $v = validarImagem($im[$k] ?? null);
         if ($v !== null) $out['imagens'][$k] = $v;
     }
+
+    // Áudio (música de fundo; só caminho seguro em uploads/, ou vazio)
+    if (array_key_exists('audio', $data)) $out['audio'] = validarAudio($data['audio']);
 
     // Cronograma (lista de momentos; ignora linhas vazias, no máximo 20)
     if (isset($data['cronograma']) && is_array($data['cronograma'])) {
@@ -681,6 +697,8 @@ function mapaTextos(array $design): array {
     foreach (imagensPadrao() as $k => $def) {
         $tokens['IMG_' . strtoupper($k)] = $esc(validarImagem($im[$k] ?? null) ?? $def);
     }
+    // Áudio (contexto de atributo src; vazio = sem música)
+    $tokens['AUDIO_SRC'] = $esc(validarAudio($design['audio'] ?? ''));
     // Cronograma e secções extra (HTML gerado)
     $tokens['CRONO_ITENS'] = cronogramaHtml($design);
     $tokens['SECCOES_EXTRA'] = seccoesExtraHtml($design);

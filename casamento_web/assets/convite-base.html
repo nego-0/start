@@ -314,7 +314,7 @@ footer .fnote{margin-top:26px;font-family:var(--ff-serif);font-style:italic;font
 <button id="audioBtn" aria-label="Ligar ou desligar música">
   <span class="bars"><i></i><i></i><i></i><i></i></span>
 </button>
-<audio id="bgAudio" loop preload="auto" src="assets/convite/musica.m4a"></audio>
+<audio id="bgAudio" loop preload="auto" src="{{AUDIO_SRC}}"></audio>
 <main>
   <section id="hero" class="page">
     <div class="frame">
@@ -523,8 +523,10 @@ footer .fnote{margin-top:26px;font-family:var(--ff-serif);font-style:italic;font
 
   /* ---- ambient music via embedded audio file ---- */
   var audioBtn=document.getElementById('audioBtn'), bgAudio=document.getElementById('bgAudio'), playing=false;
+  var temMusica = !!(bgAudio.getAttribute('src')||'').trim();
   bgAudio.volume=0.55;
   function startAudio(){
+    if(!temMusica) return;
     var p=bgAudio.play();
     if(p&&p.then){ p.then(function(){ playing=true; audioBtn.classList.add('playing'); })
                     .catch(function(){ playing=false; audioBtn.classList.remove('playing'); }); }
@@ -534,10 +536,15 @@ footer .fnote{margin-top:26px;font-family:var(--ff-serif);font-style:italic;font
     playing=false; audioBtn.classList.remove('playing');
     try{ bgAudio.pause(); }catch(e){}
   }
-  bgAudio.addEventListener('play', function(){ playing=true; audioBtn.classList.add('playing'); });
-  bgAudio.addEventListener('pause', function(){ playing=false; audioBtn.classList.remove('playing'); });
-  audioBtn.style.display='flex';
-  audioBtn.addEventListener('click', function(){ playing?stopAudio():startAudio(); });
+  if(temMusica){
+    bgAudio.addEventListener('play', function(){ playing=true; audioBtn.classList.add('playing'); });
+    bgAudio.addEventListener('pause', function(){ playing=false; audioBtn.classList.remove('playing'); });
+    audioBtn.style.display='flex';
+    audioBtn.addEventListener('click', function(){ playing?stopAudio():startAudio(); });
+  } else {
+    bgAudio.removeAttribute('src');         // evita tentar carregar src vazio
+    audioBtn.style.display='none';          // sem música: sem botão
+  }
 
   /* ---- reveals ---- */
   var io=new IntersectionObserver(function(en){en.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}});},{threshold:.16});

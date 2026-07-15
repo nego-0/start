@@ -155,7 +155,7 @@ echo $out;
 //  modelo padrão usa fontes locais e fica totalmente offline.)
 // ============================================================
 function embutirRecursos(string $html, string $base): string {
-    $mime = ['mp3'=>'audio/mpeg','m4a'=>'audio/mp4','mp4'=>'audio/mp4','jpg'=>'image/jpeg','jpeg'=>'image/jpeg','png'=>'image/png','webp'=>'image/webp','svg'=>'image/svg+xml','woff2'=>'font/woff2'];
+    $mime = ['mp3'=>'audio/mpeg','m4a'=>'audio/mp4','mp4'=>'audio/mp4','aac'=>'audio/aac','ogg'=>'audio/ogg','wav'=>'audio/wav','jpg'=>'image/jpeg','jpeg'=>'image/jpeg','png'=>'image/png','webp'=>'image/webp','svg'=>'image/svg+xml','woff2'=>'font/woff2'];
 
     $paraDataUri = function (string $rel) use ($base, $mime): ?string {
         $rel = ltrim($rel, '/');
@@ -168,7 +168,7 @@ function embutirRecursos(string $html, string $base): string {
 
     // 1) Imagens e áudio (assets/convite/, assets/ilustracoes/ ou uploads/)
     $html = preg_replace_callback(
-        '#src="((?:assets/convite/|assets/ilustracoes/|uploads/)[^"]+\.(?:jpg|jpeg|png|webp|svg|mp3|m4a|mp4))"#i',
+        '#src="((?:assets/convite/|assets/ilustracoes/|uploads/)[^"]+\.(?:jpg|jpeg|png|webp|svg|mp3|m4a|mp4|aac|ogg|wav))"#i',
         function ($m) use ($paraDataUri) {
             $d = $paraDataUri($m[1]);
             return $d ? 'src="' . $d . '"' : $m[0];

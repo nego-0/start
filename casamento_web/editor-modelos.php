@@ -269,6 +269,22 @@ $H = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
     </div>
 
     <div class="card">
+      <h2>Música</h2>
+      <p class="hint">Carregue a canção que toca ao abrir o convite (MP3/M4A/OGG, até 12&nbsp;MB). O convidado pode ligá-la ou desligá-la no botão de música. Sem canção, o botão não aparece.</p>
+      <div class="musica">
+        <label class="upl">
+          <input type="file" accept="audio/*,.mp3,.m4a,.aac,.ogg,.wav" onchange="enviarMusica(this)" hidden>
+          <span class="upl-btn">Escolher música…</span>
+        </label>
+        <span id="musicaEstado" class="foto-estado"></span>
+        <div id="musicaAtual" style="margin-top:.7rem;display:none;align-items:center;gap:.6rem;flex-wrap:wrap">
+          <audio id="musicaPreview" controls preload="none" style="max-width:100%;height:38px"></audio>
+          <button type="button" class="btn-crono" onclick="removerMusica()">Remover música</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
       <h2>Cronograma do dia</h2>
       <p class="hint">Os momentos da festa. Acrescente ou remova conforme o vosso programa.</p>
       <div id="cronoLista"></div>
@@ -343,6 +359,7 @@ $H = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
   var CHAVES_PAL = <?= json_encode(chavesPaleta()) ?>;
   var modeloAtual = <?= json_encode($design['modelo']) ?>;
   var IMAGENS = <?= json_encode($design['imagens'] ?? imagensPadrao(), JSON_UNESCAPED_SLASHES) ?>;
+  var AUDIO = <?= json_encode($design['audio'] ?? '', JSON_UNESCAPED_SLASHES) ?>;
   var CRONOGRAMA = <?= json_encode($design['cronograma'] ?? cronogramaPadrao(), JSON_UNESCAPED_UNICODE) ?>;
 
   // ---- Cronograma (lista de momentos) ----
@@ -432,9 +449,39 @@ $H = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
     inp.value='';
   }
 
+  // ---- Música de fundo ----
+  function mostrarMusica(){
+    var box = document.getElementById('musicaAtual');
+    var pv  = document.getElementById('musicaPreview');
+    if(AUDIO){ pv.src = AUDIO; box.style.display='flex'; }
+    else { pv.removeAttribute('src'); box.style.display='none'; }
+  }
+  function enviarMusica(inp){
+    var f = inp.files && inp.files[0]; if(!f) return;
+    var est = document.getElementById('musicaEstado');
+    est.className='foto-estado'; est.textContent='A enviar…';
+    var fd = new FormData(); fd.append('audio', f);
+    fetch('upload-audio.php', { method:'POST', body:fd })
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        if(d.ok){ AUDIO=d.url; est.className='foto-estado ok'; est.textContent='✓ música carregada'; mostrarMusica(); atualizarPreview(); }
+        else { est.className='foto-estado erro'; est.textContent=d.erro||'Falhou.'; }
+      })
+      .catch(function(){ est.className='foto-estado erro'; est.textContent='Erro de rede.'; });
+    inp.value='';
+  }
+  function removerMusica(){
+    var est = document.getElementById('musicaEstado');
+    var fd = new FormData(); fd.append('acao','remover');
+    fetch('upload-audio.php', { method:'POST', body:fd })
+      .then(function(r){ return r.json(); })
+      .then(function(){ AUDIO=''; est.className='foto-estado'; est.textContent='Sem música.'; mostrarMusica(); atualizarPreview(); })
+      .catch(function(){ est.className='foto-estado erro'; est.textContent='Erro de rede.'; });
+  }
+
   // Recolhe o design completo a partir dos controlos.
   function coletar(){
-    var d = { modelo: modeloAtual, evento:{}, paleta:{}, tipografia:{}, seccoes:{}, textos:{}, imagens: Object.assign({}, IMAGENS), cronograma: CRONOGRAMA, seccoes_extra: SECCOES_EXTRA, rsvp_perguntas: PERGUNTAS };
+    var d = { modelo: modeloAtual, evento:{}, paleta:{}, tipografia:{}, seccoes:{}, textos:{}, imagens: Object.assign({}, IMAGENS), audio: AUDIO, cronograma: CRONOGRAMA, seccoes_extra: SECCOES_EXTRA, rsvp_perguntas: PERGUNTAS };
     var mapa = { ev:'evento', pal:'paleta', tip:'tipografia', sec:'seccoes', tex:'textos' };
     document.querySelectorAll('[data-g][data-k]').forEach(function(el){
       var grupo = mapa[el.getAttribute('data-g')];
@@ -505,6 +552,7 @@ $H = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
   renderCrono();
   renderPerguntas();
   renderSX();
+  mostrarMusica();
   modoPreview('movel');
   window.addEventListener('load', atualizarPreview);
 </script>
