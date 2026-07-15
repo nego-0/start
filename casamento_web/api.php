@@ -101,10 +101,19 @@ if ($acao === 'rsvp_submit') {
         }
     }
 
+    // Respostas às perguntas personalizadas (JSON), saneadas.
+    $respostas = is_array($d['respostas'] ?? null) ? $d['respostas'] : [];
+    $limpo = [];
+    foreach ($respostas as $k => $v) {
+        $k = mb_substr(trim((string)$k), 0, 120); $v = mb_substr(trim((string)$v), 0, 300);
+        if ($k !== '' && $v !== '') $limpo[$k] = $v;
+    }
+    $extra = $limpo ? json_encode($limpo, JSON_UNESCAPED_UNICODE) : null;
+
     $st = $conn->prepare("UPDATE {$P}convites
-                          SET rsvp_estado=?, rsvp_confirmados=?, rsvp_mensagem=?, rsvp_em=$TS
+                          SET rsvp_estado=?, rsvp_confirmados=?, rsvp_mensagem=?, rsvp_extra=?, rsvp_em=$TS
                           WHERE id=?");
-    $st->bind_param('sisi', $estado, $confirm, $mensagem, $c['id']); // string, int, string, int
+    $st->bind_param('sissi', $estado, $confirm, $mensagem, $extra, $c['id']);
     $st->execute();
 
     ok(['estado' => $estado, 'confirmados' => $confirm]);
@@ -117,6 +126,7 @@ if ($acao === 'rsvp_submit') {
 // ---- Porteiro (admin ou porteiro) --------------------------
 if (in_array($acao, ['porta_buscar','porta_checkin','porta_stats','porta_entradas'], true)) {
     exigirPorta();
+    exigirCsrf(true); // [S1] só bloqueia POST (ex.: porta_checkin); leituras GET passam
 
     if ($acao === 'porta_stats') {
         $s = estatisticas($conn);
@@ -210,6 +220,7 @@ if (in_array($acao, ['porta_buscar','porta_checkin','porta_stats','porta_entrada
 
 // ---- Admin --------------------------------------------------
 exigirAdmin();
+exigirCsrf(true); // [S1] só bloqueia POST (gravações); leituras GET passam
 
 if ($acao === 'convite_list') {
     $tipo=$_GET['tipo']??''; $lado=$_GET['lado']??''; $estado=$_GET['estado']??'';

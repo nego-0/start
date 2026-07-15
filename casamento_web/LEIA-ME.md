@@ -10,16 +10,36 @@ O sistema foi desenhado para **coexistir** com a sua lista atual: cria tabelas n
 
 | Ficheiro | Função |
 |---|---|
-| `config.php` | Configuração central: dados do evento, palavras-passe e ligação à base de dados. **É o único ficheiro que precisa de editar.** |
+| `config.php` | Configuração central. Lê **variáveis de ambiente** (ver `.env.example`) e só usa os valores por defeito quando elas não existem — os segredos ficam fora do repositório. |
+| `.env.example` | Modelo das variáveis de ambiente (senhas em hash, credenciais da BD, URL base, fuso). Copie e defina no alojamento. |
+| `verificar.php` | **Verificação de requisitos** (PHP, extensões, escrita em `uploads/`, senhas, ligação à BD): `php verificar.php` ou como admin na Web. Não imprime segredos. |
+| `gerar-hash.php` | Utilitário de linha de comandos para gerar o *hash* de uma palavra-passe. |
+| `conta.php` | **Contas de casais e eventos** (Fase 0, multi-inquilino): registo/login por email, evento ativo e isolamento de dados. |
+| `entrar.php` / `registar.php` / `painel-casal.php` / `sair-conta.php` | Entrada, criação de conta, painel do casal e saída. |
 | `db.php` | Ligação, criação automática das tabelas e funções partilhadas. |
 | `auth.php` | Autenticação por sessão (administrador e porteiro). |
+| `seguranca.php` | **Camada de segurança**: sessão endurecida (HttpOnly/SameSite/Secure), proteção CSRF (token + verificação) e limite de tentativas de login. |
 | `api.php` | Todos os pedidos JSON (gestão, RSVP público e porteiro) e exportação CSV. |
 | `login.php` / `logout.php` | Entrada e saída. |
 | `index.php` | Painel de administração (convites, convidados, mesas, importação, QR). |
 | `convite.php` | Página pública de confirmação de presença + passe de entrada com QR. |
 | `porteiro.php` | Página do porteiro: leitura de QR por câmara e busca manual. |
 | `impressos.php` | Etiquetas dos convites físicos com QR, prontas a imprimir. |
+| `editor-modelos.php` | **Editor de modelos** (Fase 1): galeria, cores, tipografia, secções e textos, com pré-visualização ao vivo. |
+| `convite-impresso.php` | **Convite impresso** (Fase 2): cartão pronto a imprimir (A5/A6/quadrado), com sangria de 3 mm, marcas de corte, molduras e verso opcional. |
+| `convidados.php` | **Convidados & RSVP por conta** (Fase 0): lista, criação/edição/remoção, **importação CSV** (colar ou ficheiro), links de convite/RSVP e estado de confirmação. Isolado por evento. |
+| `mesas-plano.php` | **Plano de mesas visual** (Fase 3): criar mesas, adicionar convidados e arrastá-los para as mesas, com ocupação ao vivo. Isolado por evento. |
+| `porta.php` | **Check-in à porta & chegadas ao vivo** (Fase 3), por evento: procurar por nome/código, ler QR (câmara), registar/anular entrada, contador e lista de chegadas. |
+| `envios.php` | **Convites por WhatsApp** (Fase 3): modelos (convite/lembrete/agradecimento), personalização por convidado e envio via `wa.me` num clique. Isolado por evento. |
+| `editor-tela.php` | **Editor visual de tela** (Fase 2): desenho livre com Fabric.js (texto, imagens, formas, camadas, desfazer/refazer), **edição de imagem** (brilho/contraste/saturação, P&B/sépia) e exportação PNG/PDF. |
+| `impresso.php` | Persistência da tela do editor (`cw_impressos`) e ponte do design para o editor. |
+| `assets/vendor/` | Bibliotecas locais: `fabric.min.js` (editor de tela) e `jspdf.umd.min.js` (exportação PDF). |
+| `modelos.php` | Galeria de modelos (predefinições de paleta e tipografia) e registo de tipos de letra. |
+| `design.php` | Camada de personalização: esquema `cw_designs`, design padrão e o construtor de tema (funções puras). |
+| `upload-imagem.php` | Upload das **fotos por evento** (hero/história/interlúdio/acesso): validação, redimensionamento (GD) e gravação em `uploads/eventos/{id}/`. |
+| `upload-audio.php` | Upload (e remoção) da **música de fundo por evento**: validação de formato/tamanho e gravação em `uploads/eventos/{id}/`. |
 | `assets/estilo.css` | Estilo visual, alinhado com o convite (verde-floresta, dourado e marfim). |
+| `assets/convite-base.html` | Modelo do convite digital, com marcadores (`{{...}}`) para cores, tipografia e textos. |
 
 ---
 
@@ -28,24 +48,36 @@ O sistema foi desenhado para **coexistir** com a sua lista atual: cria tabelas n
 - **`cw_convites`** — o convite é a unidade central: código único, nome a exibir, sufixo opcional, tipo (`digital`/`fisico`/`ambos`), lado, número de lugares, mesa, telefone, estados de RSVP e de entrada, mensagens e observações.
 - **`cw_convidados`** — as pessoas nominais de cada convite (com RSVP e presença individuais).
 - **`cw_mesas`** — mesas com capacidade e ocupação.
+- **`cw_designs`** — o design do convite (por evento), em JSON (paleta, tipografia, secções e textos). Criada automaticamente.
+- **`cw_contas`** / **`cw_eventos`** — contas de casais e os seus eventos (Fase 0). As tabelas existentes ganham `evento_id`; os dados atuais ficam no **evento 1**.
+
+### Dois modos de acesso (plataforma)
+
+Não existe um "evento principal" — é uma plataforma multi-inquilino.
+
+- **Contas de casais** (`registar.php` / `entrar.php`) — cada casal cria a sua conta e um ou mais eventos, geridos de forma **isolada** (design, convidados, RSVP, mesas, envios, porta, impresso). Partilha pública em `convite-digital.php?evento=SLUG` e `convite-impresso.php?evento=SLUG`.
+- **Super-administrador** (`login.php`, palavra-passe em `config.php` → `admin.php`) — vê e gere **todas as contas e casamentos**: entrar num evento para o gerir, apagar eventos ou contas.
 
 ---
 
-## Instalação no InfinityFree (ou outro alojamento)
+## Instalação
 
-1. Carregue todos os ficheiros (incluindo a pasta `assets/`) para a pasta pública do site (`htdocs`).
-2. Em `config.php`, confirme os dados de ligação em `DB_CONFIGS['online']`. Já vêm preenchidos com a sua base atual (`if0_40371922_wed`), por isso o sistema liga-se e cria as tabelas `cw_` automaticamente na primeira visita.
-3. Abra o site no navegador. As tabelas são criadas sozinhas.
+1. Carregue todos os ficheiros (incluindo a pasta `assets/`) para a pasta pública do site.
+2. Defina as **variáveis de ambiente** (ver `.env.example`): senhas em hash, credenciais da base de dados, URL base e fuso. Em desenvolvimento local pode simplesmente aceitar os valores por defeito do `config.php`.
+3. Abra o site no navegador — as tabelas `cw_` são criadas automaticamente na primeira visita.
+4. Corra `php verificar.php` (ou aceda como admin) para confirmar requisitos, escrita em `uploads/`, senhas e ligação à BD.
 
-O sistema tenta primeiro a ligação `local` (útil para testes em XAMPP/Wamp) e, se falhar, usa a `online`.
+O guia completo (alojamento partilhado e servidor próprio, HTTPS, backups) está em **`docs/IMPLANTACAO.md`**.
+
+Por defeito o sistema tenta a ligação `local` e depois a `online`; defina `CW_DB_MODE=online` em produção para forçar a de produção.
 
 ---
 
-## Antes de publicar — ajustes em `config.php`
+## Antes de publicar
 
-- **Palavras-passe:** altere `SENHA_ADMIN` e `SENHA_PORTEIRO`. São distintas: o administrador acede a tudo; o porteiro só acede à página de entrada.
-- **Hora da cerimónia:** o campo `EVENTO['hora']` está como `16:00` — ajuste para a hora real.
-- **WhatsApp de contacto:** `EVENTO['whatsapp']` está com um número de exemplo — coloque o número real (formato internacional, só dígitos, ex.: `244923000000`).
+- **Palavras-passe:** defina `CW_SENHA_ADMIN` e `CW_SENHA_PORTEIRO`. São distintas: o administrador acede a tudo; o porteiro só acede à página de entrada. **Recomendado:** guarde um *hash* — gere-o com `php gerar-hash.php "a-sua-senha"` e coloque o resultado (`$2y$…`) na variável. O sistema aceita hash ou texto simples, mas o texto simples só deve servir para testes locais.
+- **URL base:** defina `CW_BASE_URL` (ex.: `https://convites.exemplo.pt`) para que os links e os QR fiquem corretos, sobretudo atrás de proxy/CDN.
+- **Fuso, hora e WhatsApp:** ajuste `CW_TZ`, `CW_HORA` e `CW_WHATSAPP` (número real, formato internacional, só dígitos) conforme o evento.
 
 ---
 
@@ -74,6 +106,26 @@ O sistema tenta primeiro a ligação `local` (útil para testes em XAMPP/Wamp) e
 **Porteiro.** Na página de entrada, o porteiro lê o QR com a câmara ou procura pelo nome/código. Vê o estado do convite e regista a entrada (de todos ou de cada pessoa). O contador de presenças atualiza em tempo real.
 
 **Convites físicos.** A página *Convites físicos* gera as etiquetas com o nome e o QR de cada convite, prontas a imprimir para os envelopes.
+
+**Modelo do convite (Fase 1).** Em *Modelo do convite* personaliza o aspeto sem tocar no código:
+
+- **Galeria de modelos** — pontos de partida (Esmeralda & Ouro, Borgonha & Rosé, Azul-Noite & Champanhe, Terracota & Sálvia) que definem paleta e tipografia.
+- **Paleta** — 11 cores que se propagam por todo o convite (incluindo o código QR).
+- **Tipografia** — três papéis (títulos, corpo e manuscrita). As fontes marcadas *(web)* precisam de internet; o modelo Esmeralda usa fontes locais e mantém o convite totalmente offline.
+- **Fotos** — carregue as quatro fotografias do convite (capa, história, interlúdio, passe). São redimensionadas e guardadas por evento em `uploads/eventos/{id}/`; ficam também embutidas na descarga offline.
+- **Música** — carregue a canção que toca ao abrir o convite (MP3/M4A/AAC/OGG/WAV, até 12&nbsp;MB). Guardada por evento em `uploads/eventos/{id}/`, embutida na descarga offline. Sem canção, o botão de música não aparece; o convidado pode sempre ligá-la ou desligá-la.
+- **História & Cronograma** — os três capítulos da "nossa história" são editáveis, e o cronograma do dia é uma lista de momentos (hora, período, título, descrição) a que se acrescentam ou removem linhas.
+- **Perguntas de RSVP** — perguntas extra (texto livre ou opções) que o convidado responde ao confirmar (ex.: menu, alergias, música). As respostas ficam guardadas por convite e aparecem na lista de convidados.
+- **Secções** — ligue/desligue a história, o interlúdio, a contagem decrescente, o cronograma, o manual, as pétalas e a música.
+- **Páginas & secções extra** — acrescente páginas próprias ao convite a partir de uma biblioteca de modelos de secção — **texto** (sobretítulo, título e parágrafo), **citação** (verso e autor), **lista** (título e itens, ex.: padrinhos, informações úteis) e **separador** decorativo. Cada secção pode ser reordenada ou removida; todas seguem a paleta e a tipografia do modelo e aparecem antes do passe de entrada.
+- **Textos** — edite as palavras do convite (aceita `<br>` para quebrar linhas).
+- **Data e casal** — os nomes e a data alimentam automaticamente o título, a contagem decrescente, o dia da semana e o botão de calendário.
+
+Tudo é mostrado numa **pré-visualização ao vivo**; ao **Guardar**, o convite público passa a refletir o novo modelo. O design fica guardado em `cw_designs` — o convite `assets/convite-base.html` permanece intacto, apenas recebe as personalizações na altura de servir.
+
+**Convite impresso (Fase 2).** A partir do **mesmo design**, a página *Convite impresso* gera um cartão pronto a imprimir com **sangria de 3 mm** e **marcas de corte**, em três **tamanhos** (A5 148×210, A6 105×148 ou quadrado 140×140), **molduras** à escolha (dupla, simples, cantos, vinha) e **verso** opcional (com monograma e citação). Botão *Imprimir / Guardar PDF*. Assim, um único desenho serve o convite digital **e** o convite físico. A conversão para CMYK é o passo de pré-impressão feito pela gráfica.
+
+**Editor de tela (Fase 2).** Para liberdade total, a página *Editor de tela* abre uma **tela de desenho** (Fabric.js) já preenchida com o modelo do design. Pode **adicionar e mover** texto, imagens e formas, gerir **camadas**, **desfazer/refazer**, e **exportar PNG (300 dpi) ou PDF** no tamanho exato. O desenho é guardado em `cw_impressos`. As bibliotecas (Fabric.js e jsPDF) são servidas localmente em `assets/vendor/`.
 
 ---
 

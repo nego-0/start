@@ -9,7 +9,32 @@ personaliza e gere os seus convites e todo o seu evento.
 
 ---
 
-## O que já existe (fundação — Fase 0)
+## O que já existe
+
+### Fase 0 — Multi-inquilino (fundação) ✅
+
+A aplicação deixou de servir um só casamento: agora tem **contas de casais** e
+**eventos**, com **isolamento de dados por evento** (aditivo e retrocompatível —
+o casamento atual passou a ser o *evento 1* e continua a funcionar tal como
+estava).
+
+- `conta.php` + `registar.php` / `entrar.php` / `painel-casal.php`: registo e
+  login por email, criação/seleção de eventos, e um painel onde cada casal
+  desenha o seu convite.
+- Isolamento: `cw_contas`, `cw_eventos` e coluna `evento_id` em convites, mesas,
+  designs e telas; cada evento tem o seu design independente.
+- **Dois acessos**: admin legado (palavra-passe) gere o evento 1 com convidados/
+  RSVP/porteiro; contas de casais gerem os seus próprios eventos e designs.
+- Partilha pública do desenho: `convite-digital.php?evento=SLUG` e
+  `convite-impresso.php?evento=SLUG`.
+- **Convidados & RSVP por conta** (`convidados.php`): cada casal gere a sua lista
+  de convites (criar/editar/apagar, links de convite e RSVP, estado de
+  confirmação), isolada por evento. A página pública de RSVP (`convite.php`)
+  mostra os nomes/data/local do **evento do convite**, não os do evento 1.
+- Falta (continuação da Fase 0): infra de produção (alojamento, base de dados
+  gerida, armazenamento de imagens) e check-in à porta por conta.
+
+## Detalhe da aplicação
 
 ### `casamento_web/` — aplicação PHP + MySQL (a funcionar)
 Sistema de inquilino único que faz a gestão completa de um casamento:
@@ -29,6 +54,45 @@ Detalhes de instalação e utilização em [`casamento_web/LEIA-ME.md`](casament
 > credenciais e palavras-passe substituídas por marcadores. Preencha os valores
 > reais apenas no seu servidor (ou num `config.local.php`, ignorado pelo git).
 
+### Fase 1 — Modelos (em curso) ✅
+
+Personalização do convite **por configuração**, construída sobre a app atual, sem
+reescrever o convite:
+
+- **Galeria de modelos** — quatro predefinições de paleta e tipografia
+  (Esmeralda & Ouro, Borgonha & Rosé, Azul-Noite & Champanhe, Terracota & Sálvia).
+- **Editor visual** (`casamento_web/editor-modelos.php`) com **pré-visualização ao
+  vivo**: cores (11 papéis), tipografia (3 papéis), secções on/off, textos e dados
+  do casal/data.
+- O aspeto é guardado em JSON (`cw_designs`) e aplicado ao servir o convite —
+  o `convite-base.html` mantém-se intacto, agora com marcadores (`{{...}}`) e a
+  paleta/tipografia em variáveis CSS.
+- Camada de tema em funções puras (`design.php`, `modelos.php`), com testes de
+  renderização independentes da base de dados.
+
+### Fase 2 — Editor e impressão (em curso) ✅
+
+O **mesmo desenho gera o convite físico**, por duas vias:
+
+- **Por configuração** — `casamento_web/convite-impresso.php`: cartão pronto a
+  imprimir em **A5/A6/quadrado**, com **sangria de 3 mm**, **marcas de corte**,
+  molduras à escolha e **verso** opcional; exporta em PDF de tamanho real.
+- **Editor visual de tela** — `casamento_web/editor-tela.php`: desenho livre com
+  **Fabric.js** (texto, imagens, formas, camadas, desfazer/refazer) partindo do
+  modelo do design; exporta **PNG (300 dpi)** e **PDF**. Bibliotecas locais em
+  `assets/vendor/` (Fabric.js + jsPDF), sem CDN nem build.
+
+Falta: conversão **CMYK** (passo de pré-impressão da gráfica) e edição de imagem
+(recorte/filtros).
+
+### Fotos por evento ✅
+
+Cada casal carrega as suas fotografias (capa, história, interlúdio, passe) no
+editor de modelos — deixaram de ser as fotos da Isabel & Abednego. As imagens
+são validadas, redimensionadas (GD) e guardadas por evento em
+`uploads/eventos/{id}/`, e ficam embutidas na descarga offline do convite.
+Ver `upload-imagem.php` e a camada `imagens` em `design.php`.
+
 ### `prototipos/` — protótipos de interface
 - `editor-convites.html` — **protótipo do Atelier de Convites** (editor visual),
   para explorar a experiência da Fase 2.
@@ -47,10 +111,10 @@ seguinte.
 
 | Fase | Objetivo | Entregáveis principais |
 |---|---|---|
-| **0 — Fundação** | Infraestrutura própria e multi-inquilinência | Alojamento, base de dados gerida, armazenamento de imagens, contas e eventos |
-| **1 — Modelos** | Personalizar o convite por configuração | Galeria de modelos, edição de cores, textos, fotos e secções |
-| **2 — Editor** | Liberdade total de desenho e impressão | Editor visual de tela, exportação para impressão pronta a usar |
-| **3 — Ecossistema** | Completar a experiência do casamento | Edição de imagem, plano de mesas visual, WhatsApp e restantes módulos |
+| **0 — Fundação** *(em curso)* | Infraestrutura própria e multi-inquilinência | Contas, eventos, isolamento por evento ✅ · convidados/RSVP por conta ✅ · falta: alojamento e BD geridos, armazenamento de imagens, check-in por conta |
+| **1 — Modelos** *(em curso)* | Personalizar o convite por configuração | Galeria de modelos, edição de cores, textos e secções ✅ · falta: gestão de fotos e música por evento |
+| **2 — Editor** *(em curso)* | Liberdade total de desenho e impressão | Convite impresso (A5/A6/quadrado, molduras, verso) ✅ · editor de tela Fabric.js (PNG/PDF) ✅ · edição de imagem (brilho/contraste/saturação, P&B/sépia) ✅ · falta: recorte interativo e CMYK (pré-impressão) |
+| **3 — Ecossistema** *(em curso)* | Completar a experiência do casamento | Plano de mesas visual ✅ · convites/lembretes por WhatsApp ✅ · falta: álbum partilhado, lista de presentes |
 
 As duas decisões que condicionam tudo o resto são a **Fase 0** (infraestrutura e
 multi-inquilinência) e a **escolha do editor** (avaliar Polotno / Fabric.js).

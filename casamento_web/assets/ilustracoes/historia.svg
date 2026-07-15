@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 700" preserveAspectRatio="xMidYMid slice" role="img" aria-label="A nossa história">
+  <rect width="1000" height="700" fill="#F4ECDC"/>
+  <g transform="translate(500 350)">
+    <!-- Dois corações entrelaçados em linha -->
+    <g fill="none" stroke="#B4864A" stroke-width="7" stroke-linecap="round">
+      <path d="M-40 -30 C -40 -70 -100 -70 -100 -22 C -100 10 -55 40 -40 66 C -25 40 20 10 20 -22 C 20 -70 -40 -70 -40 -30 Z"/>
+      <path d="M40 -30 C 40 -70 100 -70 100 -22 C 100 10 55 40 40 66 C 25 40 -20 10 -20 -22 C -20 -70 40 -70 40 -30 Z" stroke="#8A6031"/>
+    </g>
+    <!-- Ramos laterais -->
+    <g fill="none" stroke="#C79A5A" stroke-width="3" stroke-linecap="round" opacity="0.8">
+      <path d="M-150 120 C -110 90 -80 90 -50 110"/>
+      <path d="M-120 118 c -6 -18 -2 -30 10 -40"/><path d="M-90 108 c -6 -18 -2 -30 10 -40"/>
+      <path d="M150 120 C 110 90 80 90 50 110"/>
+      <path d="M120 118 c 6 -18 2 -30 -10 -40"/><path d="M90 108 c 6 -18 2 -30 -10 -40"/>
+    </g>
+  </g>
+</svg>

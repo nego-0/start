@@ -5,17 +5,41 @@
 // convite em PDF ou enviá-lo pelo WhatsApp.
 // ============================================================
 require_once __DIR__ . '/db.php';
+require_once __DIR__ . '/design.php';
 $codigo = strtoupper(trim($_GET['c'] ?? ''));
 $c = $codigo !== '' ? carregarConvite($conn, $codigo, 'codigo') : null;
 $valido = (bool)$c;
 $linkDigital = $valido ? base_url() . '/convite-digital.php?c=' . $c['codigo'] : '';
 $linkPdf     = $valido ? $linkDigital . '&download=1' : '';
+
+// Dados do casal/evento a partir do design do evento deste convite.
+$selo = 'I&amp;A'; $casalHtml = 'Convite'; $casalPlain = 'os noivos';
+$quando = ''; $venueTitulo = ''; $venueLocal = '';
+$dataIsoJs = EVENTO['data_iso'] . 'T' . EVENTO['hora'] . ':00';
+if ($valido) {
+    $GLOBALS['EVENTO_ID'] = (int)($c['evento_id'] ?? 1);
+    $design = carregarDesignAtivo($conn);
+    $tok = mapaTextos($design);
+    $selo        = $tok['INICIAIS'];
+    $casalHtml   = $tok['NOIVA'] . ' &amp; ' . $tok['NOIVO'];
+    $casalPlain  = $design['evento']['noiva'] . ' & ' . $design['evento']['noivo'];
+    $quando      = $tok['DATA_EXTENSA'] . ' · ' . $tok['HORA_EXTENSA'];
+    $venueTitulo = $design['textos']['venue_titulo'];
+    $venueLocal  = $design['textos']['venue_local'];
+    $dataIsoJs   = $design['evento']['data_iso'] . 'T' . $design['evento']['hora'] . ':00';
+    $perguntas   = $design['rsvp_perguntas'] ?? [];
+    $respSalvas  = [];
+    if (!empty($c['rsvp_extra'])) { $tmp = json_decode($c['rsvp_extra'], true); if (is_array($tmp)) $respSalvas = $tmp; }
+}
+$perguntas = $perguntas ?? [];
+$respSalvas = $respSalvas ?? [];
+$whats = EVENTO['whatsapp'];
 ?>
 <!DOCTYPE html>
 <html lang="pt">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Confirmação · Isabel &amp; Abednego</title>
+<title>Confirmação · <?= $valido ? $casalHtml : 'Convite' ?></title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Jost:wght@300;400;500&family=Pinyon+Script&display=swap" rel="stylesheet">
 <style>
@@ -114,7 +138,7 @@ $linkPdf     = $valido ? $linkDigital . '&download=1' : '';
 <?php if (!$valido): ?>
   <div class="folha"><div class="erro-pag">
     <div class="rotulo" style="color:var(--gold)">Convite</div>
-    <div class="casal">Isabel &amp; Abednego</div>
+    <div class="casal">Convite</div>
     <p style="margin-top:1rem;">Este link de convite não é válido ou já não está disponível.<br>
     Por favor, confirme o endereço ou contacte os noivos.</p>
     <p><a class="link-wa" href="https://wa.me/<?= EVENTO['whatsapp'] ?>">Falar pelo WhatsApp</a></p>
@@ -125,10 +149,10 @@ $linkPdf     = $valido ? $linkDigital . '&download=1' : '';
 ?>
   <div class="folha">
     <div class="cabeca">
-      <div class="selo">I&amp;A</div>
+      <div class="selo"><?= $selo ?></div>
       <div class="rotulo">Têm o prazer de o(a) convidar</div>
-      <div class="casal">Isabel &amp; Abednego</div>
-      <div class="quando"><?= EVENTO['data_ext'] ?> · <?= EVENTO['hora'] ?></div>
+      <div class="casal"><?= $casalHtml ?></div>
+      <div class="quando"><?= $quando ?></div>
     </div>
 
     <div class="corpo">
@@ -147,8 +171,8 @@ $linkPdf     = $valido ? $linkDigital . '&download=1' : '';
       <div class="divisor">✦</div>
 
       <div class="info-ev">
-        <strong><?= htmlspecialchars(EVENTO['local']) ?></strong><br>
-        <?= htmlspecialchars(EVENTO['cidade']) ?>
+        <strong><?= $venueTitulo ?></strong><br>
+        <?= $venueLocal ?>
       </div>
 
       <div class="divisor">Confirmação de presença</div>
@@ -195,6 +219,22 @@ $linkPdf     = $valido ? $linkDigital . '&download=1' : '';
             </div>
           </div>
           <?php endif; ?>
+
+          <?php foreach ($perguntas as $qi => $q): $ans = $respSalvas[$q['label']] ?? ''; ?>
+          <div class="campo">
+            <label><?= htmlspecialchars($q['label']) ?></label>
+            <?php if ($q['tipo'] === 'opcoes' && !empty($q['opcoes'])): ?>
+              <select class="perg" data-label="<?= htmlspecialchars($q['label'], ENT_QUOTES) ?>">
+                <option value="">—</option>
+                <?php foreach ($q['opcoes'] as $op): ?>
+                  <option value="<?= htmlspecialchars($op, ENT_QUOTES) ?>"<?= $ans === $op ? ' selected' : '' ?>><?= htmlspecialchars($op) ?></option>
+                <?php endforeach; ?>
+              </select>
+            <?php else: ?>
+              <input type="text" class="perg" data-label="<?= htmlspecialchars($q['label'], ENT_QUOTES) ?>" value="<?= htmlspecialchars($ans) ?>" placeholder="A sua resposta">
+            <?php endif; ?>
+          </div>
+          <?php endforeach; ?>
         </div>
 
         <div class="campo">
@@ -241,7 +281,7 @@ const CODIGO   = <?= json_encode($c['codigo']) ?>;
 const LINK_DIGITAL = <?= json_encode($linkDigital) ?>;
 const LUGARES  = <?= (int)$c['lugares'] ?>;
 const TEM_MEMB = <?= count($c['membros']) > 1 ? 'true':'false' ?>;
-const DATA_EV  = new Date(<?= json_encode(EVENTO['data_iso'].'T'.EVENTO['hora'].':00') ?>);
+const DATA_EV  = new Date(<?= json_encode($dataIsoJs) ?>);
 let escolha = <?= $jaRespondeu ? json_encode($c['rsvp_estado']==='recusado'?'nao':'sim') : 'null' ?>;
 
 const $=id=>document.getElementById(id);
@@ -269,7 +309,7 @@ function escolher(v){
 function enviarWhatsapp(){
   let n=($('wa-num').value||'').replace(/\D/g,'');
   if(n.length<9){ alert('Indique um número de telefone válido, com o indicativo do país.'); return; }
-  const msg='Aqui está o meu convite para o casamento de Isabel & Abednego: '+LINK_DIGITAL;
+  const msg='Aqui está o meu convite para o casamento de <?= jsEscape($casalPlain) ?>: '+LINK_DIGITAL;
   window.open('https://wa.me/'+n+'?text='+encodeURIComponent(msg),'_blank');
 }
 
@@ -286,7 +326,9 @@ async function enviar(){
   }
   const agora=()=>{ const d=new Date(),p=n=>String(n).padStart(2,'0');
     return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+' '+p(d.getHours())+':'+p(d.getMinutes())+':'+p(d.getSeconds()); };
-  const payload={ codigo:CODIGO, decisao:escolha, confirmados, mensagem:$('mensagem').value, membros, ts:agora() };
+  const respostas={};
+  document.querySelectorAll('.perg').forEach(function(el){ var v=el.value.trim(); if(v) respostas[el.dataset.label]=v; });
+  const payload={ codigo:CODIGO, decisao:escolha, confirmados, mensagem:$('mensagem').value, membros, respostas, ts:agora() };
   const r=await fetch('api.php?action=rsvp_submit',{method:'POST',body:JSON.stringify(payload)});
   const d=await r.json();
   btn.disabled=false; btn.textContent='Confirmar resposta';

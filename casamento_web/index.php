@@ -9,6 +9,7 @@ $totalConvites  = (int)$conn->query("SELECT COUNT(*) FROM {$P}convites")->fetch_
 <html lang="pt">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<?= csrfScript() ?>
 <title>Painel · Isabel &amp; Abednego</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Jost:wght@300;400;500;600&family=Pinyon+Script&display=swap" rel="stylesheet">
@@ -127,7 +128,11 @@ $totalConvites  = (int)$conn->query("SELECT COUNT(*) FROM {$P}convites")->fetch_
     </div>
     <nav class="nav">
       <a href="index.php" class="ativo">Painel</a>
-      <a href="impressos.php">Convites físicos</a>
+      <a href="editor-modelos.php">Modelo do convite</a>
+      <a href="convite-impresso.php">Convite impresso</a>
+      <a href="editor-tela.php">Editor de tela</a>
+      <a href="mesas-plano.php">Plano de mesas</a>
+      <a href="impressos.php">Etiquetas físicas</a>
       <a href="porteiro.php">Porta</a>
       <a href="logout.php">Sair</a>
     </nav>

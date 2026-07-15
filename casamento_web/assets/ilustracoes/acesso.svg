@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 800" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Passe de entrada">
+  <defs>
+    <linearGradient id="ag" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#22392C"/>
+      <stop offset="1" stop-color="#16261E"/>
+    </linearGradient>
+  </defs>
+  <rect width="1000" height="800" fill="url(#ag)"/>
+  <!-- Envelope elegante -->
+  <g transform="translate(500 400)" fill="none" stroke="#D9BC8C" stroke-width="4" stroke-linejoin="round">
+    <rect x="-180" y="-120" width="360" height="240" rx="10"/>
+    <path d="M-180 -108 L0 30 L180 -108"/>
+    <path d="M-180 108 L-40 6"/><path d="M180 108 L40 6"/>
+    <!-- Selo -->
+    <circle cx="0" cy="30" r="34" fill="#B4864A" stroke="#8A6031"/>
+    <path d="M-12 30 h24 M0 18 v24" stroke="#16261E" stroke-width="3"/>
+  </g>
+  <!-- Ramos nos cantos -->
+  <g fill="none" stroke="#C79A5A" stroke-width="3" stroke-linecap="round" opacity="0.7">
+    <path d="M60 60 C 140 90 180 150 190 230"/>
+    <path d="M90 78 c 20 -8 34 -2 44 12"/><path d="M130 110 c 20 -8 34 -2 44 12"/>
+    <path d="M940 740 C 860 710 820 650 810 570"/>
+    <path d="M910 722 c -20 8 -34 2 -44 -12"/><path d="M870 690 c -20 8 -34 2 -44 -12"/>
+  </g>
+</svg>
