@@ -61,13 +61,13 @@ function textosPadrao(): array {
     ];
 }
 
-/** Imagens padrão do convite (as do casamento Isabel & Abednego). */
+/** Imagens padrão do convite — ilustrações genéricas (o casal carrega as suas). */
 function imagensPadrao(): array {
     return [
-        'hero'       => 'assets/convite/hero.jpg',
-        'historia'   => 'assets/convite/historia.jpg',
-        'interludio' => 'assets/convite/interludio.jpg',
-        'acesso'     => 'assets/convite/acesso.jpg',
+        'hero'       => 'assets/ilustracoes/hero.svg',
+        'historia'   => 'assets/ilustracoes/historia.svg',
+        'interludio' => 'assets/ilustracoes/interludio.svg',
+        'acesso'     => 'assets/ilustracoes/acesso.svg',
     ];
 }
 function rotulosImagens(): array {
@@ -180,11 +180,11 @@ function normalizarPerguntas($data): array {
     return $out;
 }
 
-/** Caminho de imagem seguro (só assets/convite/ ou uploads/), ou null. */
+/** Caminho de imagem seguro (assets/convite/, assets/ilustracoes/ ou uploads/), ou null. */
 function validarImagem($v): ?string {
     if (!is_string($v)) return null;
     $v = trim($v);
-    if (preg_match('#^(assets/convite/|uploads/)[A-Za-z0-9_./-]+\.(jpe?g|png|webp)$#i', $v)
+    if (preg_match('#^(assets/convite/|assets/ilustracoes/|uploads/)[A-Za-z0-9_./-]+\.(jpe?g|png|webp|svg)$#i', $v)
         && strpos($v, '..') === false) {
         return $v;
     }
