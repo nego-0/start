@@ -117,7 +117,10 @@ $H = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
   .em-preview{ position:sticky; top:1.1rem; height:calc(100vh - 2.2rem); background:#16261E; border-radius:16px; overflow:hidden; border:1px solid var(--e-line); }
   .em-preview .pv-bar{ display:flex; align-items:center; gap:.5rem; padding:.5rem .8rem; color:#EFE3CB; font-size:.78rem; }
   .em-preview .pv-bar button{ background:rgba(217,188,140,.16); color:#EFE3CB; border:1px solid rgba(217,188,140,.35); border-radius:50px; padding:.3rem .7rem; cursor:pointer; font:inherit; font-size:.76rem; }
-  .em-preview iframe{ width:100%; height:calc(100% - 34px); border:0; background:#16261E; }
+  .em-preview .pv-modo.sel{ background:rgba(217,188,140,.4); }
+  .pv-palco{ height:calc(100% - 34px); display:flex; justify-content:center; overflow:auto; background:#101a15; }
+  .pv-palco iframe{ width:100%; height:100%; border:0; background:#16261E; }
+  .pv-palco.movel iframe{ width:390px; max-width:100%; box-shadow:0 0 0 6px #000, 0 10px 30px rgba(0,0,0,.5); border-radius:14px; margin:10px 0; height:calc(100% - 20px); }
   .textos-grade{ display:grid; grid-template-columns:1fr 1fr; gap:.7rem .9rem; }
   @media (max-width:620px){ .textos-grade{ grid-template-columns:1fr; } }
   .fotos{ display:grid; grid-template-columns:1fr 1fr; gap:.7rem; }
@@ -284,11 +287,13 @@ $H = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
   <!-- ---------------- Pré-visualização ---------------- -->
   <div class="em-preview">
     <div class="pv-bar">
-      <span>Pré-visualização ao vivo</span>
+      <span>Pré-visualização</span>
       <span class="sp" style="flex:1"></span>
+      <button type="button" id="pvMovel" class="pv-modo sel" onclick="modoPreview('movel')" title="Telemóvel">📱</button>
+      <button type="button" id="pvEcra" class="pv-modo" onclick="modoPreview('ecra')" title="Ecrã">🖥️</button>
       <button type="button" onclick="atualizarPreview()">Atualizar</button>
     </div>
-    <iframe name="previewFrame" id="previewFrame"></iframe>
+    <div class="pv-palco" id="pvPalco"><iframe name="previewFrame" id="previewFrame"></iframe></div>
   </div>
 </div>
 
@@ -411,7 +416,13 @@ $H = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
   }
 
   // Primeira pré-visualização
+  function modoPreview(m){
+    document.getElementById('pvPalco').classList.toggle('movel', m==='movel');
+    document.getElementById('pvMovel').classList.toggle('sel', m==='movel');
+    document.getElementById('pvEcra').classList.toggle('sel', m==='ecra');
+  }
   renderCrono();
+  modoPreview('movel');
   window.addEventListener('load', atualizarPreview);
 </script>
 </body>
